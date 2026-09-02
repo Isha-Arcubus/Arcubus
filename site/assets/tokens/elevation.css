@@ -1,0 +1,7 @@
+:root{
+  /* Shadows appear on hover only — nothing is elevated at rest. */
+  --shadow-card-hover:0 12px 34px rgba(27,27,30,0.08);
+  --shadow-accent:0 10px 30px rgba(227,30,36,0.10);
+  --blur-nav:blur(12px); /* @kind other */
+  --scrim-nav:rgba(255,255,255,0.92);
+}

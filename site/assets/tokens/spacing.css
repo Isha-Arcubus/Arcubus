@@ -1,0 +1,26 @@
+:root{
+  --space-1:6px;
+  --space-2:10px;
+  --space-3:14px;
+  --space-4:18px;
+  --space-5:22px;
+  --space-6:28px;
+  --space-7:32px;
+  --space-8:40px;
+  --space-9:48px;
+  --space-10:64px;
+  --space-11:76px;
+  --space-12:92px;
+
+  /* Layout */
+  --wrap-max:1140px;
+  --wrap-pad:28px;
+  --nav-height:70px;
+  --section-y:92px;
+  --section-y-mobile:64px;
+  --hero-y-top:92px;
+  --hero-y-bottom:76px;
+  --grid-gap:22px;
+  --grid-gap-tight:12px;
+  --split-gap:64px;
+}

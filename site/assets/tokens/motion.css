@@ -1,0 +1,10 @@
+:root{
+  --dur-fast:.2s; /* @kind other */
+  --dur-card:.25s; /* @kind other */
+  --dur-panel:.35s; /* @kind other */
+  --ease-default:ease; /* @kind other */
+  --transition-control:all .2s; /* @kind other */
+  --transition-card:box-shadow .25s,transform .25s,border-color .25s; /* @kind other */
+}
+@keyframes arc-fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){:root{--dur-fast:0s; /* @kind other */ --dur-card:0s; /* @kind other */ --dur-panel:0s /* @kind other */}}

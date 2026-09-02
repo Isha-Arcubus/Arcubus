@@ -1,0 +1,33 @@
+:root{
+  /* Brand */
+  --arc-red:#E31E24;
+  --arc-red-deep:#C4161C;
+  --arc-red-dim:rgba(227,30,36,0.07);
+  --arc-red-line:rgba(227,30,36,0.55);
+  --arc-red-shadow:rgba(227,30,36,0.10);
+
+  /* Ink & neutrals */
+  --ink:#1B1B1E;
+  --muted:#5E5E66;
+  --muted-2:#9A9AA0;
+  --bg:#FFFFFF;
+  --bg-alt:#F7F7F4;
+  --bg-chip:#EFEFEC;
+  --line:#E7E7E3;
+  --line-dark:#D6D6D0;
+
+  /* Semantic aliases */
+  --text-heading:var(--ink);
+  --text-body:var(--muted);
+  --text-accent:var(--arc-red);
+  --text-on-red:#FFFFFF;
+  --surface-page:var(--bg);
+  --surface-alt:var(--bg-alt);
+  --surface-card:#FFFFFF;
+  --surface-accent:var(--arc-red);
+  --surface-accent-soft:var(--arc-red-dim);
+  --border-default:var(--line);
+  --border-strong:var(--line-dark);
+  --border-accent:var(--arc-red);
+  --focus-ring:var(--arc-red);
+}

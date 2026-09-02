@@ -1,0 +1,14 @@
+# macOS / Windows cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Vercel
+.vercel
+
+# Nothing here is built — there is no node_modules, no dist, no lockfile.

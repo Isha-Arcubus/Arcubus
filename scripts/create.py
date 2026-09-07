@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Arcubus local admin tool
-Creates a new knowledge article from _TEMPLATE-article.html
+Creates a new knowledge article from _TEMPLATE-article.html 
+with smart multi-block text and image alignment workflows
 """
 
 from pathlib import Path
@@ -9,6 +10,7 @@ from datetime import datetime
 import os
 import re
 import sys
+import shutil
 
 # ====== PATHS (matches your structure) ======
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -52,7 +54,6 @@ def main():
     today = datetime.now()
     date_iso = input(f"\n4. Publish date (YYYY-MM-DD) [{today.strftime('%Y-%m-%d')}]:\n> ").strip() or today.strftime("%Y-%m-%d")
     
-    # Human-readable date processing loop (Works perfectly across Windows, Mac, Linux)
     try:
         date_obj = datetime.strptime(date_iso, "%Y-%m-%d")
         day = str(date_obj.day)
@@ -83,24 +84,79 @@ def main():
     takeaways_html = "\n".join(f"<li>{t}</li>" for t in takeaways)
 
 
+    # ---------- 9. Smart Main Body Content Builder ----------        
+    print("\n9. Build main body content.")
+    print("   Add paragraphs, subheadings, or copy over images dynamically with alignment rules.")
+    
+    body_blocks = []
+    IMAGE_DEST_DIR.mkdir(parents=True, exist_ok=True)
+
+    while True:
+        print("\nChoose what type of content block to add:")
+        print("  [p] Paragraph text")
+        print("  [h] Subheading (H2)")
+        print("  [i] Image File (With Layout Alignment Configurations)")
+        print("  [f] Finished building content")
+        
+        choice = input("> ").strip().lower()
+        
+        if choice == 'p':
+            text = input("Enter paragraph text:\n> ").strip()
+            if text:
+                body_blocks.append(f"<p>{text}</p>")
+                
+        elif choice == 'h':
+            heading = input("Enter subheading text:\n> ").strip()
+            if heading:
+                body_blocks.append(f"<h2>{heading}</h2>")
+                
+        elif choice == 'i':
+            img_path_str = input("Drag & drop image file here (or type path):\n> ").strip().strip("'\"")
+            img_path = Path(img_path_str)
+            
+            if not img_path.exists() or not img_path.is_file():
+                print("❌ Error: Image file not found. Block skipped.")
+                continue
+                
+            # Copy image file to assets structure
+            dest_image_path = IMAGE_DEST_DIR / img_path.name
+            try:
+                shutil.copy2(img_path, dest_image_path)
+                print(f"📸 Image successfully moved to asset tree: site/assets/images/{img_path.name}")
+                
+                alt_text = input("Enter image descriptive Alt text (optional):\n> ").strip() or title
+                
+                # Image Alignment Processing Choice Menu
+                print("\nChoose image layout style:")
+                print("  [l] Left aligned (text wraps tightly around the right side)")
+                print("  [r] Right aligned (text wraps tightly around the left side)")
+                print("  [c] Centered block (no wrapping, text breaks cleanly underneath)")
+                align_choice = input("> ").strip().lower()
+                
+                if align_choice == 'l':
+                    align_class = "img-align-left"
+                elif align_choice == 'r':
+                    align_class = "img-align-right"
+                else:
+                    align_class = "img-align-center"
+                
+                # Construct HTML structure string and save to the building container stack
+                img_html = f'<img src="../assets/images/{img_path.name}" alt="{alt_text}" class="{align_class}" />'
+                body_blocks.append(img_html)
+                print(f"✅ Added image block successfully with '{align_class}' styling.")
+                
+            except Exception as e:
+                print(f"❌ Failed to process image: {e}")
+                
+        elif choice == 'f':
+            break
+        else:
+            print("Invalid selection. Please enter p, h, i, or f.")
+
+    body = "\n".join(body_blocks).strip() or "<p>REPLACE — body content here.</p>"
 
 
-     # ---------- Main Body Content ----------        
-    print("\n9. Main body content (HTML is fine).")
-    print("   Paste everything that should go inside the body container.")
-    print("   Finish with an empty line + Enter:")
-    body_lines = []
-    try:
-        while True:
-            line = input()
-            if line.strip() == "" and body_lines:
-                break
-            body_lines.append(line)
-    except EOFError:
-        pass
-    body = "\n".join(body_lines).strip() or "<p>REPLACE — body content here.</p>"
-
-    # Optional FAQ
+    # ---------- Optional FAQ ----------
     print("\n10. FAQ (optional). Press Enter to skip.")
     faq_q1 = input("   Question 1: ").strip()
     faq_a1 = input("   Answer 1  : ").strip() if faq_q1 else ""
@@ -120,11 +176,8 @@ def main():
     html = html.replace("REPLACE — Category", category)
     html = html.replace("REPLACE — 6 min read", read_time)
     html = html.replace("REPLACE — topic", category)
-    
-    # Injects the sub-headline lede text block safely
     html = html.replace("REPLACE — one or two sentences saying what the reader will be able to do after reading. Keep under 58 characters per line of measure; the CSS handles the wrapping.", lede)
 
-    # Injects bulletproof markers
     html = html.replace("REPLACE_TAKEAWAYS_MARKER", takeaways_html)
     html = html.replace("REPLACE_BODY_MARKER", body)
 
@@ -135,7 +188,6 @@ def main():
         html = html.replace('"name": "REPLACE — a question a client actually asks, phrased the way they say it?"', f'"name": "{faq_q1}"')
         html = html.replace('"text": "REPLACE — answer it directly in the first sentence, then add the qualification."', f'"text": "{faq_a1}"')
     else:
-        # Safely wipes first item element if unneeded
         html = html.replace("""    <div class="item">\n        <h3>REPLACE — a question a client actually asks, phrased the way they say it?</h3>\n        <p>REPLACE — answer it directly in the first sentence, then add the qualification. This text must match the FAQPage JSON-LD in the head.</p>\n    </div>""", "")
 
     if faq_q2:
@@ -144,7 +196,6 @@ def main():
         html = html.replace('"name": "REPLACE — second question?"', f'"name": "{faq_q2}"')
         html = html.replace('"text": "REPLACE — answer."', f'"text": "{faq_a2}"')
     else:
-        # Safely wipes second item element if unneeded
         html = html.replace("""    <div class="item">\n        <h3>REPLACE — second question?</h3>\n        <p>REPLACE — answer.</p>\n    </div>""", "")
 
     # ---------- Write file ----------
@@ -165,7 +216,6 @@ def main():
     do_git = input("Run git add + commit + push now? (y/N): ").strip().lower()
     if do_git == "y":
         os.chdir(REPO_ROOT)
-        rel = output_path.relative_to(REPO_ROOT)
         os.system("git add .")
         os.system(f'git commit -m "Feat: Add knowledge article with updated footer and structure: {title}"')
         os.system("git push")

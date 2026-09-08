@@ -236,3 +236,61 @@ footer li a{color:var(--ink);font-size:var(--text-nav)}
 footer .base{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);margin-top:44px;padding-top:22px;font-size:var(--text-foot);color:var(--muted)}
 @media(max-width:900px){footer .cols{grid-template-columns:1fr 1fr;gap:32px}}
 @media(max-width:560px){footer .cols{grid-template-columns:1fr}}
+
+
+
+
+
+
+/* ============================================================
+   Arcubus Advisors — Article Layout Alignment System
+   ============================================================ */
+
+/* 1. Left Alignment: Image sits left, typography wraps dynamically on the right */
+.prose .img-align-left {
+    float: left;
+    margin: var(--space-2) var(--space-5) var(--space-4) 0;
+    max-width: 45%;
+    height: auto;
+    display: inline;
+}
+
+/* 2. Right Alignment: Image sits right, typography wraps dynamically on the left */
+.prose .img-align-right {
+    float: right;
+    margin: var(--space-2) 0 var(--space-4) var(--space-5);
+    max-width: 45%;
+    height: auto;
+    display: inline;
+}
+
+/* 3. Center Alignment: Occupies an entire line, pushing adjacent tags underneath */
+.prose .img-align-center {
+    display: block;
+    margin: var(--space-6) auto;
+    max-width: 85%;
+    height: auto;
+    clear: both;
+}
+
+/* 4. Smart Typography Justification Rules */
+/* Ensures clean, justified book-style formatting inside centered templates */
+
+/* .prose .img-align-center + p,
+.prose .img-align-center ~ p {
+    text-align: justify;
+    text-justify: inter-word;
+} */
+
+.prose p {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+/* 5. Clearfix Layout Shield */
+/* Keeps float structures from breaking layout bounds or container margins */
+.prose::after {
+    content: "";
+    clear: both;
+    display: table;
+}

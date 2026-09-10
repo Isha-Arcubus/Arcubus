@@ -1853,43 +1853,54 @@ class ArcubusAdminApp:
             fill="x",
             side="bottom",
             padx=15,
-            pady=10
+            pady=10,
+            ipady=6
         )
+        
+        inner = ttk.Frame(panel)
+        inner.pack(fill="x", padx=8, pady=6)
 
         self.git_commit_msg = tk.StringVar(
             value="Content update to knowledge center articles"
         )
 
         ttk.Label(
-            panel,
+            #panel,
+            inner,
             text="Git Commit Message:"
         ).pack(
             side="left",
-            padx=10,
-            pady=10
+            # padx=10,
+            # pady=10
+            padx=(4, 8),
         )
 
         ttk.Entry(
-            panel,
+            #panel,
+            inner,
             textvariable=self.git_commit_msg,
             width=55
         ).pack(
             side="left",
-            padx=5,
             fill="x",
             expand=True,
-            pady=10
+            padx=5,
+            # pady=10
         )
 
         ttk.Button(
-            panel,
+            #panel
+            inner,
             text="🚀 Push Changes to GitHub",
             command=self.trigger_git_engine
         ).pack(
             side="right",
-            padx=10,
-            pady=10
+            # padx=10,
+            # pady=10
+            padx=(10, 4)
         )
+    
+    
 
     # =========================================================
     # CORE UTILITIES

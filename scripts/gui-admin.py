@@ -29,23 +29,33 @@ from people_manager import (
 # PATH SETUP
 # =========================================================
 
-SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    # Running as .exe
+    exe_path = Path(sys.executable).resolve()
+    SCRIPTS_DIR = exe_path.parent.parent.parent
+else:
+    # Running as .py
+    SCRIPTS_DIR = Path(__file__).resolve().parent
 
-SITE_DIR = os.path.abspath(
-    os.path.join(SCRIPTS_DIR, "..", "site")
-)
 
-index_page = os.path.join(SITE_DIR, "index.html")
-knowledge_folder = os.path.join(SITE_DIR, "knowledge")
+REPO_ROOT = SCRIPTS_DIR.parent
+SITE_DIR = REPO_ROOT / "site"
+# SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# SITE_DIR = os.path.abspath(
+#     os.path.join(SCRIPTS_DIR, "..", "site")
+# )
 
-KNOWLEDGE_DIR = REPO_ROOT / "site" / "knowledge"
-IMAGE_DEST_DIR = REPO_ROOT / "site" / "assets" / "images"
+# index_page = os.path.join(SITE_DIR, "index.html")
+# knowledge_folder = os.path.join(SITE_DIR, "knowledge")
+#REPO_ROOT = Path(__file__).resolve().parent.parent
+
+KNOWLEDGE_DIR = SITE_DIR / "knowledge"
+IMAGE_DEST_DIR = SITE_DIR / "assets" / "images"
 
 ARTICLE_TEMPLATE = KNOWLEDGE_DIR / "_TEMPLATE-article.html"
 
-KNOWLEDGE_CENTRE_PATH = REPO_ROOT / "site" / "knowledge-centre.html"
+KNOWLEDGE_CENTRE_PATH = SITE_DIR / "knowledge-centre.html"
 
 
 def slugify(text: str) -> str:

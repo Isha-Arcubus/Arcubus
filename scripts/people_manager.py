@@ -14,6 +14,7 @@ import re
 import shutil
 from html import escape, unescape
 from pathlib import Path
+import sys
 
 
 DEFAULT_IMAGE = "assets/icons/person.svg"
@@ -455,8 +456,16 @@ class PeopleManager:
 # Compatibility functions used by gui-admin.py
 # ----------------------------------------------------------------------
 
+# def _default_manager():
+#     return PeopleManager(Path(__file__).resolve().parent.parent)
+
 def _default_manager():
-    return PeopleManager(Path(__file__).resolve().parent.parent)
+    if getattr(sys, "frozen", False):
+        repo_root = Path(sys.executable).resolve().parent
+    else:
+        repo_root = Path(__file__).resolve().parent.parent
+
+    return PeopleManager(repo_root)
 
 
 def list_people():

@@ -1,3 +1,0 @@
-GITHUB_TOKEN=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
-GITHUB_USER=Isha-Arcubus
-GITHUB_REPO=Arcubus-New

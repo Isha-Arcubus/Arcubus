@@ -23,13 +23,13 @@
 # import shutil
 # import re
 # import json
+# import subprocess
 # from html import escape
 # from pathlib import Path
 # from datetime import datetime
 
 # import tkinter as tk
 # from tkinter import ttk, messagebox, filedialog
-
 
 # from people_manager import (
 #     PeopleManagerError,
@@ -39,56 +39,29 @@
 #     delete_person,
 # )
 
-
 # # =========================================================
 # # OPTIONAL PILLOW SUPPORT
 # # =========================================================
 
-# # Pillow allows the application to display JPG/JPEG/WEBP
-# # images inside the live preview.
-# #
-# # If Pillow is not installed, the application still works.
-# # The preview will simply show an IMAGE placeholder for
-# # unsupported image formats.
-
 # try:
 #     from PIL import Image, ImageTk
-
 #     PIL_AVAILABLE = True
-
 # except ImportError:
 #     PIL_AVAILABLE = False
-
 
 # # =========================================================
 # # PATH SETUP
 # # =========================================================
 
-# if getattr(sys, 'frozen', False):
-
-#     # Running as .exe
-#     #exe_path = Path(sys.executable).resolve()
+# if getattr(sys, "frozen", False):
 #     REPO_ROOT = Path(sys.executable).resolve().parent
-
-#     #SCRIPTS_DIR = exe_path.parent.parent.parent
-
 # else:
-
-#     # Running as .py
-#     #SCRIPTS_DIR = Path(__file__).resolve().parent
 #     REPO_ROOT = Path(__file__).resolve().parent.parent
 
-
-# #REPO_ROOT = SCRIPTS_DIR.parent
-
 # SITE_DIR = REPO_ROOT / "site"
-
 # KNOWLEDGE_DIR = SITE_DIR / "knowledge"
-
 # IMAGE_DEST_DIR = SITE_DIR / "assets" / "images"
-
 # ARTICLE_TEMPLATE = KNOWLEDGE_DIR / "_TEMPLATE-article.html"
-
 # KNOWLEDGE_CENTRE_PATH = SITE_DIR / "knowledge-centre.html"
 
 
@@ -97,63 +70,26 @@
 # # =========================================================
 
 # def slugify(text: str) -> str:
-
 #     text = text.lower().strip()
-
-#     text = re.sub(
-#         r"[^\w\s-]",
-#         "",
-#         text
-#     )
-
-#     text = re.sub(
-#         r"[-\s]+",
-#         "-",
-#         text
-#     )
-
+#     text = re.sub(r"[^\w\s-]", "", text)
+#     text = re.sub(r"[-\s]+", "-", text)
 #     return text.strip("-")
 
 
 # class ArcubusAdminApp:
 
 #     def __init__(self, root):
-
 #         self.root = root
-
-#         self.root.title(
-#             "Arcubus – Website Content Manager Pro"
-#         )
-
-#         self.root.geometry(
-#             "1100x850"
-#         )
-
-#         self.root.minsize(
-#             900,
-#             650
-#         )
+#         self.root.title("Arcubus – Website Content Manager Pro")
+#         self.root.geometry("1100x850")
+#         self.root.minsize(900, 650)
 
 #         self.style = ttk.Style()
-
-#         self.style.theme_use(
-#             "vista" if os.name == "nt" else "clam"
-#         )
-
-#         # -------------------------------------------------
-#         # Storyboard
-#         # -------------------------------------------------
+#         self.style.theme_use("vista" if os.name == "nt" else "clam")
 
 #         self.storyboard_items = []
 
-#         # -------------------------------------------------
-#         # Main layout
-#         # -------------------------------------------------
-
-#         main_frame = ttk.Frame(
-#             self.root
-#         )
-
+#         main_frame = ttk.Frame(self.root)
 #         main_frame.pack(
 #             fill="both",
 #             expand=True,
@@ -161,46 +97,21 @@
 #             pady=(10, 0)
 #         )
 
-#         self.notebook = ttk.Notebook(
-#             main_frame
-#         )
-
-#         self.notebook.pack(
-#             fill="both",
-#             expand=True
-#         )
-
-#         # -------------------------------------------------
-#         # Build tabs
-#         # -------------------------------------------------
+#         self.notebook = ttk.Notebook(main_frame)
+#         self.notebook.pack(fill="both", expand=True)
 
 #         self.build_article_tab()
-
 #         self.build_edit_tab()
-
 #         self.build_people_tab()
-
 #         self.build_git_panel()
-
 
 #     # =========================================================
 #     # TAB 1: CREATE NEW KNOWLEDGE ARTICLE
 #     # =========================================================
 
 #     def build_article_tab(self):
-
-#         tab = ttk.Frame(
-#             self.notebook
-#         )
-
-#         self.notebook.add(
-#             tab,
-#             text=" 📝 Create New Article "
-#         )
-
-#         # -------------------------------------------------
-#         # Scrollable article area
-#         # -------------------------------------------------
+#         tab = ttk.Frame(self.notebook)
+#         self.notebook.add(tab, text=" 📝 Create New Article ")
 
 #         canvas = tk.Canvas(
 #             tab,
@@ -214,9 +125,7 @@
 #             command=canvas.yview
 #         )
 
-#         self.scrollable_frame = ttk.Frame(
-#             canvas
-#         )
+#         self.scrollable_frame = ttk.Frame(canvas)
 
 #         self.scrollable_frame.bind(
 #             "<Configure>",
@@ -239,9 +148,7 @@
 #             )
 #         )
 
-#         canvas.configure(
-#             yscrollcommand=scrollbar.set
-#         )
+#         canvas.configure(yscrollcommand=scrollbar.set)
 
 #         canvas.pack(
 #             side="left",
@@ -254,23 +161,13 @@
 #             fill="y"
 #         )
 
-#         # -------------------------------------------------
-#         # Variables
-#         # -------------------------------------------------
-
 #         self.art_title = tk.StringVar()
-
 #         self.art_category = tk.StringVar(
 #             value="Transfer Pricing"
 #         )
-
 #         self.art_read_time = tk.StringVar(
 #             value="6 min read"
 #         )
-
-#         # =================================================
-#         # ARTICLE METADATA
-#         # =================================================
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -284,10 +181,6 @@
 #             pady=(10, 5),
 #             padx=5
 #         )
-
-#         # -------------------------------------------------
-#         # Title
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -311,10 +204,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Category
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             self.scrollable_frame,
 #             text="Category / Topic:"
@@ -336,10 +225,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Read time
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             self.scrollable_frame,
 #             text="Read Time:"
@@ -360,10 +245,6 @@
 #             column=1,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # Lede
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -393,14 +274,10 @@
 
 #         self.art_lede.insert(
 #             "1.0",
-#             "Selecting the right transfer pricing method "
-#             "for intra-group services is critical to "
-#             "achieving an arm’s-length outcome."
+#             "Selecting the right transfer pricing method for "
+#             "intra-group services is critical to achieving an "
+#             "arm’s-length outcome."
 #         )
-
-#         # -------------------------------------------------
-#         # Meta description
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -427,10 +304,6 @@
 #             sticky="w",
 #             pady=5
 #         )
-
-#         # -------------------------------------------------
-#         # Takeaways
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -465,10 +338,6 @@
 #             "Key point three."
 #         )
 
-#         # -------------------------------------------------
-#         # Separator
-#         # -------------------------------------------------
-
 #         ttk.Separator(
 #             self.scrollable_frame,
 #             orient="horizontal"
@@ -480,10 +349,6 @@
 #             pady=15,
 #             padx=5
 #         )
-
-#         # =================================================
-#         # ARTICLE CONTENT BUILDER
-#         # =================================================
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -497,10 +362,6 @@
 #             pady=5,
 #             padx=5
 #         )
-
-#         # -------------------------------------------------
-#         # Buttons
-#         # -------------------------------------------------
 
 #         control_deck = ttk.Frame(
 #             self.scrollable_frame
@@ -519,32 +380,19 @@
 #             control_deck,
 #             text="➕ Add Paragraph",
 #             command=self.add_paragraph_block
-#         ).pack(
-#             side="left",
-#             padx=5
-#         )
+#         ).pack(side="left", padx=5)
 
 #         ttk.Button(
 #             control_deck,
 #             text="➕ Add Subheading (H2)",
 #             command=self.add_heading_block
-#         ).pack(
-#             side="left",
-#             padx=5
-#         )
+#         ).pack(side="left", padx=5)
 
 #         ttk.Button(
 #             control_deck,
 #             text="➕ Add Image Asset",
 #             command=self.add_image_block
-#         ).pack(
-#             side="left",
-#             padx=5
-#         )
-
-#         # -------------------------------------------------
-#         # Storyboard
-#         # -------------------------------------------------
+#         ).pack(side="left", padx=5)
 
 #         self.storyboard_container = ttk.Frame(
 #             self.scrollable_frame
@@ -559,12 +407,7 @@
 #             padx=5
 #         )
 
-#         # Initial paragraph
 #         self.add_paragraph_block()
-
-#         # -------------------------------------------------
-#         # Separator
-#         # -------------------------------------------------
 
 #         ttk.Separator(
 #             self.scrollable_frame,
@@ -578,10 +421,6 @@
 #             padx=5
 #         )
 
-#         # =================================================
-#         # FAQ
-#         # =================================================
-
 #         ttk.Label(
 #             self.scrollable_frame,
 #             text="Questions / FAQ Accordions (Optional)",
@@ -594,10 +433,6 @@
 #             pady=5,
 #             padx=5
 #         )
-
-#         # -------------------------------------------------
-#         # FAQ 1 question
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -622,10 +457,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # FAQ 1 answer
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             self.scrollable_frame,
 #             text="FAQ Answer 1:"
@@ -648,10 +479,6 @@
 #             columnspan=2,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # FAQ 2 question
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             self.scrollable_frame,
@@ -676,10 +503,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # FAQ 2 answer
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             self.scrollable_frame,
 #             text="FAQ Answer 2:"
@@ -703,10 +526,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Build article
-#         # -------------------------------------------------
-
 #         ttk.Button(
 #             self.scrollable_frame,
 #             text="🚀 Build and Save Complete Article",
@@ -718,13 +537,11 @@
 #             sticky="w"
 #         )
 
-
 #     # =========================================================
 #     # STORYBOARD
 #     # =========================================================
 
 #     def add_paragraph_block(self):
-
 #         row_frame = ttk.LabelFrame(
 #             self.storyboard_container,
 #             text=" Paragraph Component Block "
@@ -767,13 +584,9 @@
 #             padx=10
 #         )
 
-#         self.storyboard_items.append(
-#             item_data
-#         )
-
+#         self.storyboard_items.append(item_data)
 
 #     def add_heading_block(self):
-
 #         row_frame = ttk.LabelFrame(
 #             self.storyboard_container,
 #             text=" Subheading (H2) Component Block "
@@ -814,17 +627,9 @@
 #             padx=10
 #         )
 
-#         self.storyboard_items.append(
-#             item_data
-#         )
-
-
-#     # =========================================================
-#     # IMAGE BLOCK WITH LIVE PREVIEW
-#     # =========================================================
+#         self.storyboard_items.append(item_data)
 
 #     def add_image_block(self):
-
 #         row_frame = ttk.LabelFrame(
 #             self.storyboard_container,
 #             text=" Image Layout Asset Block "
@@ -836,16 +641,7 @@
 #             pady=7
 #         )
 
-#         # -------------------------------------------------
-#         # Main two-column layout
-#         #
-#         # LEFT  = image controls
-#         # RIGHT = live preview
-#         # -------------------------------------------------
-
-#         content_frame = ttk.Frame(
-#             row_frame
-#         )
+#         content_frame = ttk.Frame(row_frame)
 
 #         content_frame.pack(
 #             fill="x",
@@ -854,9 +650,7 @@
 #             pady=8
 #         )
 
-#         controls_frame = ttk.Frame(
-#             content_frame
-#         )
+#         controls_frame = ttk.Frame(content_frame)
 
 #         controls_frame.grid(
 #             row=0,
@@ -865,9 +659,7 @@
 #             padx=(2, 15)
 #         )
 
-#         preview_outer = ttk.Frame(
-#             content_frame
-#         )
+#         preview_outer = ttk.Frame(content_frame)
 
 #         preview_outer.grid(
 #             row=0,
@@ -885,10 +677,6 @@
 #             weight=0
 #         )
 
-#         # =================================================
-#         # FILE PATH
-#         # =================================================
-
 #         path_var = tk.StringVar()
 
 #         path_frame = ttk.Frame(
@@ -903,9 +691,7 @@
 #         ttk.Label(
 #             path_frame,
 #             text="File Path:"
-#         ).pack(
-#             side="left"
-#         )
+#         ).pack(side="left")
 
 #         path_entry = ttk.Entry(
 #             path_frame,
@@ -921,16 +707,8 @@
 #         ttk.Button(
 #             path_frame,
 #             text="Browse...",
-#             command=lambda: self.browse_file(
-#                 path_var
-#             )
-#         ).pack(
-#             side="left"
-#         )
-
-#         # =================================================
-#         # IMAGE POSITION
-#         # =================================================
+#             command=lambda: self.browse_file(path_var)
+#         ).pack(side="left")
 
 #         position_frame = ttk.LabelFrame(
 #             controls_frame,
@@ -979,20 +757,12 @@
 #             pady=8
 #         )
 
-#         # =================================================
-#         # ITEM DATA
-#         # =================================================
-
 #         item_data = {
 #             "type": "i",
 #             "path": path_var,
 #             "align": align_var,
 #             "frame": row_frame
 #         }
-
-#         # =================================================
-#         # LIVE PREVIEW
-#         # =================================================
 
 #         preview_canvas = self.create_image_preview(
 #             preview_outer,
@@ -1002,12 +772,7 @@
 
 #         item_data["preview_canvas"] = preview_canvas
 
-#         # -------------------------------------------------
-#         # Update preview whenever image path changes
-#         # -------------------------------------------------
-
 #         def on_path_change(*args):
-
 #             self.update_image_preview(
 #                 preview_canvas,
 #                 path_var,
@@ -1019,12 +784,7 @@
 #             on_path_change
 #         )
 
-#         # -------------------------------------------------
-#         # Update preview whenever alignment changes
-#         # -------------------------------------------------
-
 #         def on_alignment_change(*args):
-
 #             self.update_image_preview(
 #                 preview_canvas,
 #                 path_var,
@@ -1036,13 +796,7 @@
 #             on_alignment_change
 #         )
 
-#         # =================================================
-#         # REMOVE BUTTON
-#         # =================================================
-
-#         button_frame = ttk.Frame(
-#             row_frame
-#         )
+#         button_frame = ttk.Frame(row_frame)
 
 #         button_frame.pack(
 #             fill="x",
@@ -1065,17 +819,11 @@
 #             item_data
 #         )
 
-#         # Initial preview
 #         self.update_image_preview(
 #             preview_canvas,
 #             path_var,
 #             align_var
 #         )
-
-
-#     # =========================================================
-#     # CREATE IMAGE PREVIEW CANVAS
-#     # =========================================================
 
 #     def create_image_preview(
 #         self,
@@ -1083,7 +831,6 @@
 #         path_var,
 #         align_var
 #     ):
-
 #         preview_frame = ttk.LabelFrame(
 #             parent,
 #             text=" Live Article Preview "
@@ -1107,15 +854,9 @@
 #             pady=8
 #         )
 
-#         # Keep references attached to canvas.
 #         preview_canvas.preview_photo = None
 
 #         return preview_canvas
-
-
-#     # =========================================================
-#     # UPDATE IMAGE PREVIEW
-#     # =========================================================
 
 #     def update_image_preview(
 #         self,
@@ -1123,30 +864,18 @@
 #         path_var,
 #         align_var
 #     ):
-
 #         if not canvas.winfo_exists():
 #             return
 
-#         canvas.delete(
-#             "all"
-#         )
-
-#         # -------------------------------------------------
-#         # Preview dimensions
-#         # -------------------------------------------------
+#         canvas.delete("all")
 
 #         canvas_width = 430
 #         canvas_height = 235
 
-#         # Article page boundaries
 #         left = 18
 #         top = 16
 #         right = canvas_width - 18
 #         bottom = canvas_height - 16
-
-#         # -------------------------------------------------
-#         # Article background
-#         # -------------------------------------------------
 
 #         canvas.create_rectangle(
 #             left,
@@ -1157,32 +886,18 @@
 #             outline="#dddddd"
 #         )
 
-#         # -------------------------------------------------
-#         # Alignment
-#         # -------------------------------------------------
-
 #         align = align_var.get()
-
-#         # -------------------------------------------------
-#         # Try loading selected image
-#         # -------------------------------------------------
 
 #         image_path = path_var.get().strip()
 
 #         loaded_image = None
 
 #         if image_path:
-
 #             try:
-
-#                 image_path_obj = Path(
-#                     image_path
-#                 )
+#                 image_path_obj = Path(image_path)
 
 #                 if image_path_obj.exists():
-
 #                     if PIL_AVAILABLE:
-
 #                         loaded_image = Image.open(
 #                             image_path_obj
 #                         )
@@ -1196,21 +911,10 @@
 #                             loaded_image.copy()
 #                         )
 
-#                     else:
-
-#                         loaded_image = None
-
 #             except Exception:
-
 #                 loaded_image = None
-
 #         else:
-
 #             canvas.preview_photo = None
-
-#         # -------------------------------------------------
-#         # Image dimensions
-#         # -------------------------------------------------
 
 #         image_width = 105
 #         image_height = 80
@@ -1218,15 +922,7 @@
 #         image_x = 0
 #         image_y = 0
 
-#         # =================================================
-#         # CENTRE
-#         # =================================================
-
 #         if align == "c":
-
-#             # ---------------------------------------------
-#             # Text above image
-#             # ---------------------------------------------
 
 #             self.draw_preview_text_lines(
 #                 canvas,
@@ -1252,10 +948,6 @@
 #                 loaded_image
 #             )
 
-#             # ---------------------------------------------
-#             # Text below image
-#             # ---------------------------------------------
-
 #             self.draw_preview_text_lines(
 #                 canvas,
 #                 45,
@@ -1272,10 +964,6 @@
 #                 font=("Segoe UI", 9)
 #             )
 
-#         # =================================================
-#         # LEFT
-#         # =================================================
-
 #         elif align == "l":
 
 #             image_x = 32
@@ -1290,10 +978,6 @@
 #                 loaded_image
 #             )
 
-#             # ---------------------------------------------
-#             # Text wraps on the right of the image
-#             # ---------------------------------------------
-
 #             self.draw_preview_text_lines(
 #                 canvas,
 #                 155,
@@ -1301,10 +985,6 @@
 #                 225,
 #                 7
 #             )
-
-#             # ---------------------------------------------
-#             # Full width text below image
-#             # ---------------------------------------------
 
 #             self.draw_preview_text_lines(
 #                 canvas,
@@ -1321,10 +1001,6 @@
 #                 fill="#777777",
 #                 font=("Segoe UI", 9)
 #             )
-
-#         # =================================================
-#         # RIGHT
-#         # =================================================
 
 #         elif align == "r":
 
@@ -1345,10 +1021,6 @@
 #                 loaded_image
 #             )
 
-#             # ---------------------------------------------
-#             # Text wraps on the left of the image
-#             # ---------------------------------------------
-
 #             self.draw_preview_text_lines(
 #                 canvas,
 #                 35,
@@ -1356,10 +1028,6 @@
 #                 225,
 #                 7
 #             )
-
-#             # ---------------------------------------------
-#             # Full width text below image
-#             # ---------------------------------------------
 
 #             self.draw_preview_text_lines(
 #                 canvas,
@@ -1377,11 +1045,6 @@
 #                 font=("Segoe UI", 9)
 #             )
 
-
-#     # =========================================================
-#     # DRAW PREVIEW IMAGE
-#     # =========================================================
-
 #     def draw_preview_image(
 #         self,
 #         canvas,
@@ -1391,13 +1054,7 @@
 #         height,
 #         loaded_image
 #     ):
-
-#         # -------------------------------------------------
-#         # If actual image is available
-#         # -------------------------------------------------
-
 #         if loaded_image is not None:
-
 #             canvas.create_image(
 #                 x + width // 2,
 #                 y + height // 2,
@@ -1414,10 +1071,6 @@
 
 #             return
 
-#         # -------------------------------------------------
-#         # Placeholder
-#         # -------------------------------------------------
-
 #         canvas.create_rectangle(
 #             x,
 #             y,
@@ -1427,7 +1080,6 @@
 #             outline="#aaaaaa"
 #         )
 
-#         # Mountain shape
 #         canvas.create_polygon(
 #             x + 20,
 #             y + height - 18,
@@ -1443,7 +1095,6 @@
 #             outline=""
 #         )
 
-#         # Sun
 #         canvas.create_oval(
 #             x + width - 34,
 #             y + 15,
@@ -1461,11 +1112,6 @@
 #             font=("Segoe UI", 9, "bold")
 #         )
 
-
-#     # =========================================================
-#     # DRAW SIMULATED ARTICLE TEXT
-#     # =========================================================
-
 #     def draw_preview_text_lines(
 #         self,
 #         canvas,
@@ -1474,7 +1120,6 @@
 #         width,
 #         count
 #     ):
-
 #         line_height = 12
 
 #         widths = [
@@ -1485,11 +1130,10 @@
 #             0.88,
 #             0.80,
 #             0.67,
-#             0.94,
+#             0.94
 #         ]
 
 #         for i in range(count):
-
 #             fraction = widths[
 #                 i % len(widths)
 #             ]
@@ -1505,35 +1149,24 @@
 #                 outline=""
 #             )
 
-
-#     # =========================================================
-#     # REMOVE STORYBOARD ITEM
-#     # =========================================================
-
 #     def remove_storyboard_item(
 #         self,
 #         frame,
 #         item_data
 #     ):
-
 #         frame.destroy()
 
 #         if item_data in self.storyboard_items:
-
 #             self.storyboard_items.remove(
 #                 item_data
 #             )
-
 
 #     # =========================================================
 #     # TAB 2: EDIT ARTICLE
 #     # =========================================================
 
 #     def build_edit_tab(self):
-
-#         tab = ttk.Frame(
-#             self.notebook
-#         )
+#         tab = ttk.Frame(self.notebook)
 
 #         self.notebook.add(
 #             tab,
@@ -1552,10 +1185,6 @@
 #             pady=15,
 #             padx=15
 #         )
-
-#         # -------------------------------------------------
-#         # Target HTML
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             tab,
@@ -1591,10 +1220,6 @@
 #             padx=5
 #         )
 
-#         # -------------------------------------------------
-#         # Typo
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             tab,
 #             text="2. Text Error to Find:"
@@ -1616,10 +1241,6 @@
 #             column=1,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # Correction
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             tab,
@@ -1654,10 +1275,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Separator
-#         # -------------------------------------------------
-
 #         ttk.Separator(
 #             tab,
 #             orient="horizontal"
@@ -1669,10 +1286,6 @@
 #             padx=15,
 #             pady=10
 #         )
-
-#         # -------------------------------------------------
-#         # Image replacement
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             tab,
@@ -1754,10 +1367,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Log
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             tab,
 #             text="Current Session Changes:"
@@ -1786,10 +1395,6 @@
 #             pady=5
 #         )
 
-#         # -------------------------------------------------
-#         # Save
-#         # -------------------------------------------------
-
 #         self.btn_save_edits = ttk.Button(
 #             tab,
 #             text="💾 Write and Finalize All Changes To Disk",
@@ -1804,26 +1409,17 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # State
-#         # -------------------------------------------------
-
 #         self.active_edit_html = ""
-
 #         self.active_file_path = None
 
 #         self.refresh_articles_list()
-
 
 #     # =========================================================
 #     # PEOPLE TAB
 #     # =========================================================
 
 #     def build_people_tab(self):
-
-#         tab = ttk.Frame(
-#             self.notebook
-#         )
+#         tab = ttk.Frame(self.notebook)
 
 #         self.notebook.add(
 #             tab,
@@ -1842,9 +1438,7 @@
 #             command=canvas.yview
 #         )
 
-#         frame = ttk.Frame(
-#             canvas
-#         )
+#         frame = ttk.Frame(canvas)
 
 #         frame.bind(
 #             "<Configure>",
@@ -1876,10 +1470,6 @@
 
 #         self.people_frame = frame
 
-#         # -------------------------------------------------
-#         # Header
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Our People Manager",
@@ -1895,10 +1485,8 @@
 
 #         ttk.Label(
 #             frame,
-#             text=(
-#                 "Add, edit, delete and replace profile images "
-#                 "without manually editing our-people.html."
-#             )
+#             text="Add, edit, delete and replace profile images "
+#                  "without manually editing our-people.html."
 #         ).grid(
 #             row=1,
 #             column=0,
@@ -1907,10 +1495,6 @@
 #             padx=15,
 #             pady=(0, 15)
 #         )
-
-#         # =================================================
-#         # EDIT PERSON
-#         # =================================================
 
 #         ttk.Label(
 #             frame,
@@ -1965,10 +1549,6 @@
 #             padx=5
 #         )
 
-#         # -------------------------------------------------
-#         # Name
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Name:"
@@ -1992,10 +1572,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Role
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Designation:"
@@ -2018,10 +1594,6 @@
 #             columnspan=2,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # Bio
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             frame,
@@ -2049,10 +1621,6 @@
 #             pady=5
 #         )
 
-#         # -------------------------------------------------
-#         # Expertise 1
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Expertise 1:"
@@ -2076,10 +1644,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Expertise 2
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Expertise 2:"
@@ -2102,10 +1666,6 @@
 #             columnspan=2,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # Current image
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             frame,
@@ -2131,10 +1691,6 @@
 #             columnspan=2,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # New image
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             frame,
@@ -2170,10 +1726,6 @@
 #             padx=5
 #         )
 
-#         # -------------------------------------------------
-#         # Default icon
-#         # -------------------------------------------------
-
 #         self.person_default_image = tk.BooleanVar(
 #             value=False
 #         )
@@ -2189,13 +1741,7 @@
 #             pady=3
 #         )
 
-#         # -------------------------------------------------
-#         # Buttons
-#         # -------------------------------------------------
-
-#         people_edit_buttons = ttk.Frame(
-#             frame
-#         )
+#         people_edit_buttons = ttk.Frame(frame)
 
 #         people_edit_buttons.grid(
 #             row=12,
@@ -2222,10 +1768,6 @@
 #             side="left"
 #         )
 
-#         # -------------------------------------------------
-#         # Separator
-#         # -------------------------------------------------
-
 #         ttk.Separator(
 #             frame,
 #             orient="horizontal"
@@ -2237,10 +1779,6 @@
 #             padx=15,
 #             pady=15
 #         )
-
-#         # =================================================
-#         # ADD PERSON
-#         # =================================================
 
 #         ttk.Label(
 #             frame,
@@ -2254,10 +1792,6 @@
 #             padx=15,
 #             pady=5
 #         )
-
-#         # -------------------------------------------------
-#         # Name
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             frame,
@@ -2282,10 +1816,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Role
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Designation:"
@@ -2308,10 +1838,6 @@
 #             columnspan=2,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # Bio
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             frame,
@@ -2339,10 +1865,6 @@
 #             pady=5
 #         )
 
-#         # -------------------------------------------------
-#         # Expertise 1
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Expertise 1:"
@@ -2366,10 +1888,6 @@
 #             sticky="w"
 #         )
 
-#         # -------------------------------------------------
-#         # Expertise 2
-#         # -------------------------------------------------
-
 #         ttk.Label(
 #             frame,
 #             text="Expertise 2:"
@@ -2392,10 +1910,6 @@
 #             columnspan=2,
 #             sticky="w"
 #         )
-
-#         # -------------------------------------------------
-#         # Image
-#         # -------------------------------------------------
 
 #         ttk.Label(
 #             frame,
@@ -2444,34 +1958,25 @@
 
 #         self.refresh_people_list()
 
-
 #     # =========================================================
 #     # PEOPLE HELPERS
 #     # =========================================================
 
 #     def _clear_person_fields(self):
-
 #         for entry in (
 #             self.person_name,
 #             self.person_role,
 #             self.person_expertise1,
-#             self.person_expertise2,
+#             self.person_expertise2
 #         ):
-
-#             entry.delete(
-#                 0,
-#                 tk.END
-#             )
+#             entry.delete(0, tk.END)
 
 #         self.person_bio.delete(
 #             "1.0",
 #             tk.END
 #         )
 
-#         self.person_new_image.set(
-#             ""
-#         )
-
+#         self.person_new_image.set("")
 #         self.person_current_image.set(
 #             "Not loaded"
 #         )
@@ -2480,20 +1985,15 @@
 #             False
 #         )
 
-
 #     def refresh_people_list(self):
-
 #         try:
-
 #             people = list_people()
 
 #         except PeopleManagerError as e:
-
 #             messagebox.showerror(
 #                 "People Page Error",
 #                 str(e)
 #             )
-
 #             return
 
 #         values = [
@@ -2504,36 +2004,23 @@
 #         self.people_selector["values"] = values
 
 #         if values:
-
-#             self.people_selector.current(
-#                 0
-#             )
-
+#             self.people_selector.current(0)
 #             self.load_selected_person()
 
-
-#     def load_selected_person(
-#         self,
-#         event=None
-#     ):
-
+#     def load_selected_person(self, event=None):
 #         try:
-
 #             people = list_people()
 
 #         except PeopleManagerError as e:
-
 #             messagebox.showerror(
 #                 "People Page Error",
 #                 str(e)
 #             )
-
 #             return
 
 #         index = self.people_selector.current()
 
 #         if index < 0 or index >= len(people):
-
 #             return
 
 #         person = people[index]
@@ -2575,10 +2062,7 @@
 
 #         self.person_expertise1.insert(
 #             0,
-#             person.get(
-#                 "expertise1",
-#                 ""
-#             )
+#             person.get("expertise1", "")
 #         )
 
 #         self.person_expertise2.delete(
@@ -2588,10 +2072,7 @@
 
 #         self.person_expertise2.insert(
 #             0,
-#             person.get(
-#                 "expertise2",
-#                 ""
-#             )
+#             person.get("expertise2", "")
 #         )
 
 #         self.person_current_image.set(
@@ -2599,17 +2080,13 @@
 #             or "assets/icons/person.svg"
 #         )
 
-#         self.person_new_image.set(
-#             ""
-#         )
+#         self.person_new_image.set("")
 
 #         self.person_default_image.set(
 #             False
 #         )
 
-
 #     def browse_people_image(self):
-
 #         filename = filedialog.askopenfilename(
 #             filetypes=[
 #                 (
@@ -2620,14 +2097,11 @@
 #         )
 
 #         if filename:
-
 #             self.person_new_image.set(
 #                 filename
 #             )
 
-
 #     def browse_add_person_image(self):
-
 #         filename = filedialog.askopenfilename(
 #             filetypes=[
 #                 (
@@ -2638,42 +2112,33 @@
 #         )
 
 #         if filename:
-
 #             self.add_person_image.set(
 #                 filename
 #             )
 
-
 #     def update_selected_person(self):
-
 #         index = self.people_selector.current()
 
 #         if index < 0:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Please select a person."
 #             )
-
 #             return
 
 #         name = self.person_name.get().strip()
-
 #         role = self.person_role.get().strip()
-
 #         bio = self.person_bio.get(
 #             "1.0",
 #             "end"
 #         ).strip()
 
 #         expertise1 = self.person_expertise1.get().strip()
-
 #         expertise2 = self.person_expertise2.get().strip()
 
 #         image_path = self.person_new_image.get().strip()
 
 #         try:
-
 #             backup = update_person(
 #                 index,
 #                 name,
@@ -2682,30 +2147,26 @@
 #                 expertise1,
 #                 expertise2,
 #                 image_path=image_path,
-#                 use_default_image=self.person_default_image.get(),
+#                 use_default_image=self.person_default_image.get()
 #             )
 
 #             messagebox.showinfo(
 #                 "Updated",
-#                 f"Person updated successfully.\n\n"
-#                 f"our-people.html was updated.\n"
+#                 "Person updated successfully.\n\n"
+#                 "our-people.html was updated.\n"
 #                 f"Backup created:\n{backup.name}"
 #             )
 
 #             self.refresh_people_list()
 
 #         except PeopleManagerError as e:
-
 #             messagebox.showerror(
 #                 "Update Failed",
 #                 str(e)
 #             )
 
-
 #     def add_new_person(self):
-
 #         name = self.add_person_name.get().strip()
-
 #         role = self.add_person_role.get().strip()
 
 #         bio = self.add_person_bio.get(
@@ -2714,26 +2175,24 @@
 #         ).strip()
 
 #         expertise1 = self.add_person_expertise1.get().strip()
-
 #         expertise2 = self.add_person_expertise2.get().strip()
 
 #         image_path = self.add_person_image.get().strip()
 
 #         try:
-
 #             backup = add_person(
 #                 name,
 #                 role,
 #                 bio,
 #                 expertise1,
 #                 expertise2,
-#                 image_path=image_path,
+#                 image_path=image_path
 #             )
 
 #             messagebox.showinfo(
 #                 "Person Added",
-#                 f"New person added successfully.\n\n"
-#                 f"our-people.html was updated.\n"
+#                 "New person added successfully.\n\n"
+#                 "our-people.html was updated.\n"
 #                 f"Backup created:\n{backup.name}"
 #             )
 
@@ -2762,62 +2221,50 @@
 #                 tk.END
 #             )
 
-#             self.add_person_image.set(
-#                 ""
-#             )
+#             self.add_person_image.set("")
 
 #             self.refresh_people_list()
 
 #         except PeopleManagerError as e:
-
 #             messagebox.showerror(
 #                 "Add Failed",
 #                 str(e)
 #             )
 
-
 #     def delete_selected_person(self):
-
 #         index = self.people_selector.current()
 
 #         if index < 0:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Please select a person."
 #             )
-
 #             return
 
 #         try:
-
 #             people = list_people()
 
 #             if index >= len(people):
-
 #                 messagebox.showerror(
 #                     "Error",
 #                     "Selected person no longer exists."
 #                 )
-
 #                 return
 
 #             person = people[index]
 
 #             confirm = messagebox.askyesno(
 #                 "Confirm Delete",
-#                 f"Delete this person from the Our People page?\n\n"
+#                 "Delete this person from the Our People page?\n\n"
 #                 f"{person['name']} — {person['role']}\n\n"
-#                 f"This will remove the visible card and its Person JSON-LD entry."
+#                 "This will remove the visible card and its "
+#                 "Person JSON-LD entry."
 #             )
 
 #             if not confirm:
-
 #                 return
 
-#             backup = delete_person(
-#                 index
-#             )
+#             backup = delete_person(index)
 
 #             messagebox.showinfo(
 #                 "Deleted",
@@ -2828,19 +2275,16 @@
 #             self.refresh_people_list()
 
 #         except PeopleManagerError as e:
-
 #             messagebox.showerror(
 #                 "Delete Failed",
 #                 str(e)
 #             )
-
 
 #     # =========================================================
 #     # GIT PANEL
 #     # =========================================================
 
 #     def build_git_panel(self):
-
 #         panel = ttk.LabelFrame(
 #             self.root,
 #             text=" Global Deployment Engine "
@@ -2854,9 +2298,7 @@
 #             ipady=6
 #         )
 
-#         inner = ttk.Frame(
-#             panel
-#         )
+#         inner = ttk.Frame(panel)
 
 #         inner.pack(
 #             fill="x",
@@ -2896,16 +2338,11 @@
 #             padx=(10, 4)
 #         )
 
-
 #     # =========================================================
 #     # CORE UTILITIES
 #     # =========================================================
 
-#     def browse_file(
-#         self,
-#         target_var
-#     ):
-
+#     def browse_file(self, target_var):
 #         filename = filedialog.askopenfilename(
 #             filetypes=[
 #                 (
@@ -2916,14 +2353,9 @@
 #         )
 
 #         if filename:
-
-#             target_var.set(
-#                 filename
-#             )
-
+#             target_var.set(filename)
 
 #     def refresh_articles_list(self):
-
 #         if KNOWLEDGE_DIR.exists():
 
 #             files = [
@@ -2935,23 +2367,14 @@
 #             self.edit_file_box["values"] = files
 
 #             if files:
-
-#                 self.edit_file_box.current(
-#                     0
-#                 )
+#                 self.edit_file_box.current(0)
 
 #         else:
-
 #             self.edit_file_box["values"] = [
 #                 "Missing knowledge directory Layout Tree"
 #             ]
 
-
-#     def log_message(
-#         self,
-#         message
-#     ):
-
+#     def log_message(self, message):
 #         self.edit_log.config(
 #             state="normal"
 #         )
@@ -2965,34 +2388,25 @@
 #             state="disabled"
 #         )
 
-#         self.edit_log.see(
-#             "end"
-#         )
-
+#         self.edit_log.see("end")
 
 #     # =========================================================
 #     # CREATE ARTICLE
 #     # =========================================================
 
 #     def process_article(self):
-
 #         title = self.art_title.get().strip()
 
 #         if not title:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Article Title headline context is required."
 #             )
-
 #             return
 
-#         slug = slugify(
-#             title
-#         )
+#         slug = slugify(title)
 
 #         category = self.art_category.get().strip()
-
 #         read_time = self.art_read_time.get().strip()
 
 #         lede = self.art_lede.get(
@@ -3000,13 +2414,16 @@
 #             "end"
 #         ).strip()
 
-#         desc = (
-#             self.art_desc.get(
-#                 "1.0",
-#                 "end"
-#             ).strip()
-#             or f"{title} — practical guidance from Arcubus Advisors."
-#         )
+#         desc = self.art_desc.get(
+#             "1.0",
+#             "end"
+#         ).strip()
+
+#         if not desc:
+#             desc = (
+#                 f"{title} — practical guidance from "
+#                 "Arcubus Advisors."
+#             )
 
 #         tk_list = [
 #             t.strip()
@@ -3018,21 +2435,13 @@
 #         ]
 
 #         takeaways_html = "\n".join(
-#             f"<li>{escape(t)}</li>"
+#             f"{escape(t)}"
 #             for t in tk_list
 #         )
-
-#         # =====================================================
-#         # COMPILE STORYBOARD
-#         # =====================================================
 
 #         compiled_body_blocks = []
 
 #         for item in self.storyboard_items:
-
-#             # -------------------------------------------------
-#             # Paragraph
-#             # -------------------------------------------------
 
 #             if item["type"] == "p":
 
@@ -3042,28 +2451,18 @@
 #                 ).strip()
 
 #                 if val:
-
 #                     compiled_body_blocks.append(
-#                         f"<p>{val}</p>"
+#                         val
 #                     )
-
-#             # -------------------------------------------------
-#             # Heading
-#             # -------------------------------------------------
 
 #             elif item["type"] == "h":
 
 #                 val = item["widget"].get().strip()
 
 #                 if val:
-
 #                     compiled_body_blocks.append(
-#                         f"<h2>{val}</h2>"
+#                         val
 #                     )
-
-#             # -------------------------------------------------
-#             # Image
-#             # -------------------------------------------------
 
 #             elif item["type"] == "i":
 
@@ -3071,9 +2470,7 @@
 
 #                 if img_str:
 
-#                     img_path = Path(
-#                         img_str
-#                     )
+#                     img_path = Path(img_str)
 
 #                     if img_path.exists():
 
@@ -3090,55 +2487,39 @@
 #                         align = item["align"].get()
 
 #                         if align == "l":
-
-#                             align_class = (
-#                                 "img-align-left"
-#                             )
+#                             align_class = "img-align-left"
 
 #                         elif align == "r":
-
-#                             align_class = (
-#                                 "img-align-right"
-#                             )
+#                             align_class = "img-align-right"
 
 #                         else:
-
-#                             align_class = (
-#                                 "img-align-center"
-#                             )
+#                             align_class = "img-align-center"
 
 #                         compiled_body_blocks.append(
-#                             f'<img src="../assets/images/{img_path.name}" '
-#                             f'alt="{escape(title)}" '
-#                             f'class="{align_class}" />'
+#                             f'<figure class="{align_class}">'
+#                             f'<img src="../assets/images/{escape(img_path.name)}" '
+#                             f'alt="{escape(img_path.stem)}">'
+#                             f'</figure>'
 #                         )
 
 #                     else:
-
 #                         messagebox.showwarning(
 #                             "Image Not Found",
 #                             f"The image file could not be found:\n\n"
 #                             f"{img_str}"
 #                         )
-
 #                         return
 
 #         body_text = "\n".join(
 #             compiled_body_blocks
 #         ).strip()
 
-#         # =====================================================
-#         # TEMPLATE
-#         # =====================================================
-
 #         if not ARTICLE_TEMPLATE.exists():
-
 #             messagebox.showerror(
 #                 "Error",
 #                 f"Missing template structure mapping:\n"
 #                 f"{ARTICLE_TEMPLATE}"
 #             )
-
 #             return
 
 #         html = ARTICLE_TEMPLATE.read_text(
@@ -3152,7 +2533,8 @@
 
 #         html = html.replace(
 #             "REPLACE — Headline in sentence case, ending in a full stop.",
-#             title if title.endswith(".") else title + "."
+#             title if title.endswith(".")
+#             else title + "."
 #         )
 
 #         html = html.replace(
@@ -3181,7 +2563,9 @@
 #         )
 
 #         html = html.replace(
-#             "REPLACE — one or two sentences saying what the reader will be able to do after reading. Keep under 58 characters per line of measure; the CSS handles the wrapping.",
+#             "REPLACE — one or two sentences saying what the reader "
+#             "will be able to do after reading. Keep under 58 characters "
+#             "per line of measure; the CSS handles the wrapping.",
 #             lede
 #         )
 
@@ -3207,21 +2591,15 @@
 #             body_text
 #         )
 
-#         # =====================================================
-#         # FAQ
-#         # =====================================================
-
-#         q1 = self.faq_q1.get().strip()
-
-#         a1 = self.faq_a1.get().strip()
-
-#         q2 = self.faq_q2.get().strip()
-
-#         a2 = self.faq_a2.get().strip()
-
 #         # -----------------------------------------------------
 #         # FAQ 1
 #         # -----------------------------------------------------
+
+#         q1 = self.faq_q1.get().strip()
+#         a1 = self.faq_a1.get().strip()
+
+#         q2 = self.faq_q2.get().strip()
+#         a2 = self.faq_a2.get().strip()
 
 #         if q1:
 
@@ -3237,22 +2615,12 @@
 
 #             html = html.replace(
 #                 '"name": "REPLACE — a question a client actually asks, phrased the way they say it?"',
-#                 f'"name": "{q1}"'
+#                 f'"name": "{escape(q1)}"'
 #             )
 
 #             html = html.replace(
 #                 '"text": "REPLACE — answer it directly in the first sentence, then add the qualification."',
-#                 f'"text": "{a1}"'
-#             )
-
-#         else:
-
-#             html = html.replace(
-#                 """    <div class="item">
-#         <h3>REPLACE — a question a client actually asks, phrased the way they say it?</h3>
-#         <p>REPLACE — answer it directly in the first sentence, then add the qualification. This text must match the FAQPage JSON-LD in the head.</p>
-#     </div>""",
-#                 ""
+#                 f'"text": "{escape(a1)}"'
 #             )
 
 #         # -----------------------------------------------------
@@ -3273,31 +2641,19 @@
 
 #             html = html.replace(
 #                 '"name": "REPLACE — second question?"',
-#                 f'"name": "{q2}"'
+#                 f'"name": "{escape(q2)}"'
 #             )
 
 #             html = html.replace(
 #                 '"text": "REPLACE — answer."',
-#                 f'"text": "{a2}"'
+#                 f'"text": "{escape(a2)}"'
 #             )
 
-#         else:
+#         out_path = KNOWLEDGE_DIR / f"{slug}.html"
 
-#             html = html.replace(
-#                 """    <div class="item">
-#         <h3>REPLACE — second question?</h3>
-#         <p>REPLACE — answer.</p>
-#     </div>""",
-#                 ""
-#             )
-
-#         # =====================================================
-#         # SAVE NEW ARTICLE
-#         # =====================================================
-
-#         out_path = (
-#             KNOWLEDGE_DIR
-#             / f"{slug}.html"
+#         KNOWLEDGE_DIR.mkdir(
+#             parents=True,
+#             exist_ok=True
 #         )
 
 #         out_path.write_text(
@@ -3306,7 +2662,7 @@
 #         )
 
 #         # =====================================================
-#         # UPDATE KNOWLEDGE CENTRE PAGE
+#         # UPDATE KNOWLEDGE CENTRE
 #         # =====================================================
 
 #         knowledge_centre_path = (
@@ -3323,23 +2679,10 @@
 #                 )
 #             )
 
-#             safe_title = escape(
-#                 title
-#             )
-
-#             safe_category = escape(
-#                 category
-#             )
-
-#             safe_lede = escape(
-#                 lede
-#             )
-
-#             safe_read_time = escape(
-#                 read_time
-#             )
-
-#             today = datetime.now()
+#             safe_title = escape(title)
+#             safe_category = escape(category)
+#             safe_lede = escape(lede)
+#             safe_read_time = escape(read_time)
 
 #             display_date = today.strftime(
 #                 "%d %B %Y"
@@ -3350,18 +2693,18 @@
 #             )
 
 #             # -------------------------------------------------
-#             # ARTICLE CARD
+#             # IMPORTANT:
+#             # This marker should match the marker present
+#             # in your knowledge-centre.html.
 #             # -------------------------------------------------
 
-#             new_article_card = f'''<a class="articlecard" href="knowledge/{slug}.html">
-# <span class="tag">{safe_category}</span>
-# <h3>{safe_title}</h3>
-# <p>{safe_lede}</p>
-# <span class="date">{display_date} · {safe_read_time}</span>
-# </a>'''
+#             article_grid_marker = ""
 
-#             article_grid_marker = (
-#                 '<div class="grid g3">'
+#             new_article_card = (
+#                 f"\n{safe_category}\n"
+#                 f"{safe_title}\n"
+#                 f"{safe_lede}\n"
+#                 f"{display_date} · {safe_read_time}\n"
 #             )
 
 #             article_already_exists = (
@@ -3387,31 +2730,17 @@
 
 #                     messagebox.showwarning(
 #                         "Knowledge Centre",
-#                         "Article was created, but the article "
-#                         "grid could not be found in "
-#                         "knowledge-centre.html."
+#                         "Article grid could not be found."
 #                     )
-
-#             # -------------------------------------------------
-#             # BLOGPOST JSON-LD
-#             # -------------------------------------------------
-
-#             if not article_already_exists:
 
 #                 new_blog_post = {
 #                     "@type": "BlogPosting",
 #                     "headline": title,
-#                     "url": (
-#                         f"https://arcubus.in/"
-#                         f"knowledge/{slug}.html"
-#                     ),
+#                     "url": f"arcubus.in/knowledge/{slug}.html",
 #                     "datePublished": iso_date,
 #                     "description": lede,
 #                     "author": {
-#                         "@id": (
-#                             "https://arcubus.in/"
-#                             "#organization"
-#                         )
+#                         "@id": "arcubus.in"
 #                     }
 #                 }
 
@@ -3421,9 +2750,7 @@
 #                     indent=10
 #                 )
 
-#                 blogpost_marker = (
-#                     '"blogPost": ['
-#                 )
+#                 blogpost_marker = '"blogPost": ['
 
 #                 if blogpost_marker in knowledge_centre_html:
 
@@ -3442,48 +2769,35 @@
 
 #                     messagebox.showwarning(
 #                         "Knowledge Centre JSON-LD",
-#                         "Article was created, but the "
-#                         "BlogPosting JSON-LD section "
-#                         "could not be found."
+#                         "BlogPosting JSON-LD section not found."
 #                     )
 
-#             # -------------------------------------------------
-#             # SAVE KNOWLEDGE CENTRE
-#             # -------------------------------------------------
-
-#             knowledge_centre_path.write_text(
-#                 knowledge_centre_html,
-#                 encoding="utf-8"
-#             )
+#                 knowledge_centre_path.write_text(
+#                     knowledge_centre_html,
+#                     encoding="utf-8"
+#                 )
 
 #         else:
 
 #             messagebox.showwarning(
 #                 "Knowledge Centre",
-#                 "Article was created, but "
 #                 "knowledge-centre.html was not found."
 #             )
 
-#         # =====================================================
-#         # SUCCESS
-#         # =====================================================
-
 #         messagebox.showinfo(
 #             "Success",
-#             f"Complete mixed-prose article written successfully:\n"
+#             f"Article written successfully:\n"
 #             f"{out_path.name}\n\n"
-#             f"Knowledge Centre updated successfully."
+#             "Knowledge Centre updated."
 #         )
 
 #         self.refresh_articles_list()
-
 
 #     # =========================================================
 #     # EDIT SESSION
 #     # =========================================================
 
 #     def open_edit_session(self):
-
 #         selected_filename = (
 #             self.edit_file_box.get()
 #         )
@@ -3492,18 +2806,25 @@
 #             not selected_filename
 #             or "Missing" in selected_filename
 #         ):
-
 #             messagebox.showerror(
 #                 "Error",
-#                 "Please select a verified operational file target first."
+#                 "Please select a verified operational "
+#                 "file target first."
 #             )
-
 #             return False
 
 #         target_path = (
 #             KNOWLEDGE_DIR
 #             / selected_filename
 #         )
+
+#         if not target_path.exists():
+#             messagebox.showerror(
+#                 "Error",
+#                 f"Target article does not exist:\n"
+#                 f"{target_path}"
+#             )
+#             return False
 
 #         if self.active_file_path != target_path:
 
@@ -3535,9 +2856,7 @@
 
 #         return True
 
-
 #     def ask_for_more_changes(self):
-
 #         another_error = messagebox.askyesno(
 #             "Correction Applied",
 #             "The correction was applied successfully.\n\n"
@@ -3545,51 +2864,42 @@
 #         )
 
 #         if another_error:
-
 #             self.edit_typo.focus_set()
-
 #             return
 
 #         change_image = messagebox.askyesno(
 #             "Check Images",
-#             "Do you want to replace or correct any image in this article?"
+#             "Do you want to replace or correct "
+#             "any image in this article?"
 #         )
 
 #         if change_image:
-
 #             self.edit_old_image.focus_set()
-
 #             return
 
 #         self.btn_save_edits.focus_set()
 
-
 #     def apply_typo_correction(self):
-
 #         if not self.open_edit_session():
-
 #             return
 
 #         typo = self.edit_typo.get().strip()
-
-#         correction = self.edit_correction.get().strip()
+#         correction = (
+#             self.edit_correction.get().strip()
+#         )
 
 #         if not typo:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Text to find cannot be empty."
 #             )
-
 #             return
 
 #         if typo == correction:
-
 #             messagebox.showwarning(
 #                 "No Change",
 #                 "The old and new text are identical."
 #             )
-
 #             return
 
 #         position = self.active_edit_html.find(
@@ -3597,13 +2907,11 @@
 #         )
 
 #         if position == -1:
-
 #             messagebox.showwarning(
 #                 "Not Found",
 #                 f"Specified string pattern "
 #                 f"'{typo}' was not found."
 #             )
-
 #             return
 
 #         self.active_edit_html = (
@@ -3635,9 +2943,7 @@
 
 #         self.ask_for_more_changes()
 
-
 #     def browse_image_for_edit(self):
-
 #         filename = filedialog.askopenfilename(
 #             filetypes=[
 #                 (
@@ -3648,16 +2954,12 @@
 #         )
 
 #         if filename:
-
 #             self.edit_new_image.set(
 #                 filename
 #             )
 
-
 #     def replace_article_image(self):
-
 #         if not self.open_edit_session():
-
 #             return
 
 #         old_image = (
@@ -3669,22 +2971,18 @@
 #         )
 
 #         if not old_image:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Enter the current image filename, "
 #                 "for example: old-image.jpg"
 #             )
-
 #             return
 
 #         if not new_image:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Please select the replacement image."
 #             )
-
 #             return
 
 #         new_image_path = Path(
@@ -3692,13 +2990,11 @@
 #         )
 
 #         if not new_image_path.exists():
-
 #             messagebox.showerror(
 #                 "Error",
-#                 f"Replacement image was not found:\n"
+#                 "Replacement image was not found:\n"
 #                 f"{new_image_path}"
 #             )
-
 #             return
 
 #         IMAGE_DEST_DIR.mkdir(
@@ -3710,14 +3006,9 @@
 #             new_image_path.name
 #         )
 
-#         destination = (
-#             IMAGE_DEST_DIR
-#             / new_filename
-#         )
-
 #         shutil.copy2(
 #             new_image_path,
-#             destination
+#             IMAGE_DEST_DIR / new_filename
 #         )
 
 #         old_filename = Path(
@@ -3739,14 +3030,11 @@
 #         )
 
 #         if occurrences == 0:
-
 #             messagebox.showwarning(
 #                 "Image Not Found",
-#                 f"Could not find this image "
-#                 f"reference in the article:\n"
+#                 "Could not find this image reference:\n"
 #                 f"{old_src}"
 #             )
-
 #             return
 
 #         self.active_edit_html = (
@@ -3767,9 +3055,7 @@
 #             tk.END
 #         )
 
-#         self.edit_new_image.set(
-#             ""
-#         )
+#         self.edit_new_image.set("")
 
 #         self.btn_save_edits.config(
 #             state="normal"
@@ -3778,20 +3064,16 @@
 #         another_error = messagebox.askyesno(
 #             "Image Updated",
 #             "The image was replaced successfully.\n\n"
-#             "Are there any other errors or images you want to change?"
+#             "Are there any other modifications?"
 #         )
 
 #         if another_error:
-
 #             self.edit_typo.focus_set()
 
 #         else:
-
 #             self.btn_save_edits.focus_set()
 
-
 #     def save_final_edits(self):
-
 #         if (
 #             self.active_file_path
 #             and self.active_edit_html
@@ -3804,7 +3086,7 @@
 
 #             messagebox.showinfo(
 #                 "Saved",
-#                 f"All mutations finalized successfully:\n"
+#                 "All mutations finalized successfully:\n"
 #                 f"{self.active_file_path.name}"
 #             )
 
@@ -3813,77 +3095,72 @@
 #             )
 
 #             self.active_file_path = None
-
 #             self.active_edit_html = ""
-
-
 #     # =========================================================
-#     # GIT
+#     # GITHUB DEPLOYMENT PIPELINE
 #     # =========================================================
 #     def trigger_git_engine(self):
-
-#         msg = self.git_commit_msg.get().strip()
+#         msg = (
+#             self.git_commit_msg.get().strip()
+#         )
 
 #         if not msg:
-
 #             messagebox.showerror(
 #                 "Error",
 #                 "Git commit message cannot be empty."
 #             )
-
 #             return
 
 #         confirm = messagebox.askyesno(
 #             "Publish to Website",
 #             "Publish all current website changes to GitHub?\n\n"
-#             "This will:\n"
-#             "• Stage all changes\n"
-#             "• Create a Git commit\n"
-#             "• Push the commit to GitHub\n\n"
-#             "Vercel will then deploy the updated website."
+#             "This will stage, commit, and push updates "
+#             "to trigger Vercel deployment."
 #         )
-#         if not confirm:
 
+#         if not confirm:
 #             return
 
 #         try:
-
 #             import subprocess
+#             git_repo = SITE_DIR
 
 #             # -------------------------------------------------
-#             # 1. STAGE ALL CHANGES
+#             # 1. STAGE CHANGES
 #             # -------------------------------------------------
 
 #             add_result = subprocess.run(
 #                 ["git", "add", "."],
-#                 cwd=REPO_ROOT,
+#                 cwd=git_repo,
 #                 capture_output=True,
 #                 text=True
 #             )
 
 #             if add_result.returncode != 0:
-
 #                 raise Exception(
 #                     add_result.stderr.strip()
 #                     or "git add failed."
 #                 )
 
 #             # -------------------------------------------------
-#             # 2. CHECK WHETHER THERE ARE CHANGES
+#             # 2. CHECK FOR STAGED CHANGES
 #             # -------------------------------------------------
 
 #             status_result = subprocess.run(
-#                 ["git", "diff", "--cached", "--quiet"],
-#                 cwd=REPO_ROOT
+#                 [
+#                     "git",
+#                     "diff",
+#                     "--cached",
+#                     "--quiet"
+#                 ],
+#                 cwd=git_repo
 #             )
 
 #             if status_result.returncode == 0:
-
 #                 messagebox.showinfo(
 #                     "No Changes",
 #                     "There are no changes to publish."
 #                 )
-
 #                 return
 
 #             # -------------------------------------------------
@@ -3891,14 +3168,18 @@
 #             # -------------------------------------------------
 
 #             commit_result = subprocess.run(
-#                 ["git", "commit", "-m", msg],
-#                 cwd=REPO_ROOT,
+#                 [
+#                     "git",
+#                     "commit",
+#                     "-m",
+#                     msg
+#                 ],
+#                 cwd=git_repo,
 #                 capture_output=True,
 #                 text=True
 #             )
 
 #             if commit_result.returncode != 0:
-
 #                 raise Exception(
 #                     commit_result.stderr.strip()
 #                     or commit_result.stdout.strip()
@@ -3908,29 +3189,29 @@
 #             # -------------------------------------------------
 #             # 4. PUSH
 #             # -------------------------------------------------
-
 #             push_result = subprocess.run(
-#                 ["git", "push"],
-#                 cwd=REPO_ROOT,
+#                 [
+#                     "git",
+#                     "push"
+#                 ],
+#                 cwd=git_repo,
 #                 capture_output=True,
 #                 text=True
 #             )
 
 #             if push_result.returncode != 0:
-
 #                 raise Exception(
 #                     push_result.stderr.strip()
 #                     or push_result.stdout.strip()
 #                     or "git push failed."
 #                 )
-#             # -------------------------------------------------
-#             # 5. SUCCESS
-#             # -------------------------------------------------
 
 #             messagebox.showinfo(
 #                 "Published Successfully",
-#                 "Website changes were successfully pushed to GitHub.\n\n"
-#                 "Vercel will automatically deploy the updated website."
+#                 "Website changes were successfully "
+#                 "pushed to GitHub.\n\n"
+#                 "Vercel will automatically deploy "
+#                 "the updated website."
 #             )
 
 #         except Exception as e:
@@ -3941,21 +3222,22 @@
 #                 f"{e}"
 #             )
 
+#         # finally:
+
+#         #     try:
+#         #         askpass_file.unlink()
+#         #     except Exception:
+#         #         pass
+
 
 # # =========================================================
-# # ENTRY POINT
+# # APPLICATION ENTRY POINT
 # # =========================================================
 
 # if __name__ == "__main__":
-
 #     root = tk.Tk()
-
-#     app = ArcubusAdminApp(
-#         root
-#     )
-
+#     app = ArcubusAdminApp(root)
 #     root.mainloop()
-
 
 
 
@@ -7099,116 +6381,83 @@ class ArcubusAdminApp:
 
             self.active_file_path = None
             self.active_edit_html = ""
-
     # =========================================================
     # GITHUB DEPLOYMENT PIPELINE
     # =========================================================
-
+    
     def ask_github_credentials(self):
-        dialog = tk.Toplevel(
-            self.root
-        )
+        popup = tk.Toplevel(self.root)
+        popup.title("GitHub Authentication")
+        popup.geometry("500x300")
+        popup.resizable(False, False)
+        popup.grab_set()
 
-        dialog.title(
-            "GitHub Authentication"
-        )
+        tk.Label(
+            popup,
+            text="GitHub Authentication",
+            font=("Arial", 16, "bold")
+        ).pack(pady=(20, 15))
 
-        dialog.geometry(
-            "400x220"
-        )
-
-        dialog.resizable(
-            False,
-            False
-        )
-
-        dialog.grab_set()
-
-        ttk.Label(
-            dialog,
+        tk.Label(
+            popup,
             text="GitHub Username:"
-        ).pack(
-            anchor="w",
-            padx=30,
-            pady=(25, 5)
+        ).pack(anchor="w", padx=40)
+
+        username_entry = tk.Entry(
+            popup,
+            width=50
         )
+        username_entry.pack(padx=40, pady=(5, 15))
 
-        username_var = tk.StringVar()
+        tk.Label(
+            popup,
+            text="Personal Access Token (PAT):"
+        ).pack(anchor="w", padx=40)
 
-        username_entry = ttk.Entry(
-            dialog,
-            textvariable=username_var,
-            width=40
+        token_entry = tk.Entry(
+            popup,
+            width=50,
+            show="*"
         )
+        token_entry.pack(padx=40, pady=(5, 20))
 
-        username_entry.pack(
-            padx=30
-        )
+        credentials = {}
 
-        ttk.Label(
-            dialog,
-            text="GitHub Personal Access Token (PAT):"
-        ).pack(
-            anchor="w",
-            padx=30,
-            pady=(15, 5)
-        )
+        def save_credentials():
+            username = username_entry.get().strip()
+            token = token_entry.get().strip()
 
-        password_var = tk.StringVar()
-
-        password_entry = ttk.Entry(
-            dialog,
-            textvariable=password_var,
-            show="*",
-            width=40
-        )
-
-        password_entry.pack(
-            padx=30
-        )
-
-        result = {}
-
-        def submit():
-            username = (
-                username_var.get().strip()
-            )
-
-            password = (
-                password_var.get().strip()
-            )
-
-            if not username or not password:
+            if not username:
                 messagebox.showerror(
                     "Error",
-                    "Please enter both credentials.",
-                    parent=dialog
+                    "GitHub username cannot be empty.",
+                    parent=popup
                 )
                 return
 
-            result["username"] = username
-            result["password"] = password
+            if not token:
+                messagebox.showerror(
+                    "Error",
+                    "GitHub Personal Access Token cannot be empty.",
+                    parent=popup
+                )
+                return
 
-            dialog.destroy()
+            credentials["username"] = username
+            credentials["token"] = token
 
-        ttk.Button(
-            dialog,
-            text="Authenticate",
-            command=submit
-        ).pack(
-            pady=20
-        )
+            popup.destroy()
 
-        username_entry.focus()
+        tk.Button(
+            popup,
+            text="Continue",
+            width=15,
+            command=save_credentials
+        ).pack()
 
-        self.root.wait_window(
-            dialog
-        )
+        self.root.wait_window(popup)
 
-        return (
-            result.get("username"),
-            result.get("password")
-        )
+        return credentials if credentials else None
 
     def trigger_git_engine(self):
         msg = (
@@ -7231,35 +6480,19 @@ class ArcubusAdminApp:
 
         if not confirm:
             return
-
-        username, password = (
-            self.ask_github_credentials()
-        )
-
-        if not username or not password:
+        
+        credentials = self.ask_github_credentials()
+        
+        if not credentials:
             return
-
-        # -----------------------------------------------------
-        # Temporary Git AskPass script
-        # -----------------------------------------------------
-
-        askpass_file = (
-            Path(tempfile.gettempdir())
-            / "arcubus_git_askpass.cmd"
-        )
-
-        askpass_file.write_text(
-            "@echo off\n"
-            f'if "%~1"=="Username for \'https://github.com\': " '
-            f'echo {username}\n'
-            f'if "%~1"=="Password for \'https://{username}@github.com\': " '
-            f'echo {password}\n'
-            f'if "%~1"=="Password for \'https://github.com\': " '
-            f'echo {password}\n',
-            encoding="utf-8"
-        )
+        
+        # ADDITION Explicitly declare tracking states for the security restoration block
+        original_url = None
+        url_modified = False
 
         try:
+            import subprocess
+            git_repo = SITE_DIR
 
             # -------------------------------------------------
             # 1. STAGE CHANGES
@@ -7267,7 +6500,7 @@ class ArcubusAdminApp:
 
             add_result = subprocess.run(
                 ["git", "add", "."],
-                cwd=REPO_ROOT,
+                cwd=git_repo,
                 capture_output=True,
                 text=True
             )
@@ -7289,7 +6522,7 @@ class ArcubusAdminApp:
                     "--cached",
                     "--quiet"
                 ],
-                cwd=REPO_ROOT
+                cwd=git_repo
             )
 
             if status_result.returncode == 0:
@@ -7310,7 +6543,7 @@ class ArcubusAdminApp:
                     "-m",
                     msg
                 ],
-                cwd=REPO_ROOT,
+                cwd=git_repo,
                 capture_output=True,
                 text=True
             )
@@ -7325,29 +6558,42 @@ class ArcubusAdminApp:
             # -------------------------------------------------
             # 4. PUSH
             # -------------------------------------------------
-
-            git_env = os.environ.copy()
-
-            git_env["GIT_ASKPASS"] = str(
-                askpass_file
-            )
-
-            git_env["GIT_TERMINAL_PROMPT"] = "0"
-
-            # IMPORTANT:
-            # This assumes your Git remote is named "github".
-            push_result = subprocess.run(
-                [
-                    "git",
-                    "push",
-                    "github"
-                ],
-                cwd=REPO_ROOT,
+            
+            #ADDITION
+            # Fetch the clean remote URL pattern assigned to the package repo template
+            get_url_res = subprocess.run(
+                ["git", "remote", "get-url", "origin"],
+                cwd=git_repo,
                 capture_output=True,
-                text=True,
-                env=git_env
+                text=True
             )
-
+            if get_url_res.returncode != 0:
+                raise Exception("Failed to trace remote repository target configuration URL.")
+            
+            original_url = get_url_res.stdout.strip()
+            
+            # Extract domain metadata. Converts 'https://github.com' 
+            # into a secure structured tokenized pathway link
+            clean_url = original_url.replace("https://", "")
+            auth_url = f"https://{credentials['username']}:{credentials['token']}@{clean_url}"
+            
+            
+            #ADDITION
+            # Hot-swap the remote origin endpoint structure on disk
+            subprocess.run(
+                ["git", "remote", "set-url", "origin", auth_url],
+                cwd=git_repo,
+                check=True
+            )
+            url_modified = True
+            
+            push_result = subprocess.run(
+                ["git", "push"],
+                cwd=git_repo,
+                capture_output=True,
+                text=True
+            )
+            
             if push_result.returncode != 0:
                 raise Exception(
                     push_result.stderr.strip()
@@ -7371,12 +6617,26 @@ class ArcubusAdminApp:
                 f"{e}"
             )
 
-        finally:
+        # finally:
 
-            try:
-                askpass_file.unlink()
-            except Exception:
-                pass
+        #     try:
+        #         askpass_file.unlink()
+        #     except Exception:
+        #         pass
+        
+        finally:
+            # -------------------------------------------------
+            # SECURITY RECOVERY: Scrub plaintext token footprint
+            # -------------------------------------------------
+            if url_modified and original_url:
+                try:
+                    subprocess.run(
+                        ["git", "remote", "set-url", "origin", original_url],
+                        cwd=git_repo,
+                        check=True
+                    )
+                except Exception:
+                    pass  # Prevent structural crashing if execution context terminates early
 
 
 # =========================================================

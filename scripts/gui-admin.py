@@ -55,7 +55,7 @@ except ImportError:
 # =========================================================
 
 if getattr(sys, "frozen", False):
-    REPO_ROOT = Path(sys.executable).resolve().parent
+    REPO_ROOT = Path(sys.executable).resolve().parent  # used to find the absolute directory
 else:
     REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -103,6 +103,7 @@ class ArcubusAdminApp:
 
         self.build_article_tab()
         self.build_edit_tab()
+        self.pending_images_to_delete = []
         self.build_people_tab()
         self.build_git_panel()
 
@@ -1322,6 +1323,21 @@ class ArcubusAdminApp:
             column=1,
             sticky="w"
         )
+        
+        
+        #addition of new code 
+        
+        ttk.Button(
+            tab,
+            text="View Article Images",
+            command=self.show_article_images
+        ).grid(
+            row=7,
+            column=2,
+            sticky="w",
+            padx=5
+        )
+
 
         ttk.Label(
             tab,
@@ -2295,8 +2311,9 @@ class ArcubusAdminApp:
             fill="x",
             side="bottom",
             padx=15,
-            pady=10,
-            ipady=6
+            #pady=10,
+            pady=(5,10),
+            #ipady=6
         )
 
         inner = ttk.Frame(panel)
@@ -2313,7 +2330,8 @@ class ArcubusAdminApp:
 
         ttk.Label(
             inner,
-            text="Git Commit Message:"
+            text="Git Commit Message:",
+            font=("Segoe UI", 11) # newly added
         ).pack(
             side="left",
             padx=(4, 8)
@@ -2496,7 +2514,8 @@ class ArcubusAdminApp:
                         else:
                             align_class = "img-align-center"
 
-                        compiled_body_blocks.append(
+                        compiled_body_blocks.append( # escape needed to prevent broken HTML layout and ensure the webpage renders correctly 
+                                                    #you are using Python f-strings to inject variables directly into HTML attributes
                             f'<figure class="{align_class}">'
                             f'<img src="../assets/images/{escape(img_path.name)}" '
                             f'alt="{escape(img_path.stem)}">'
@@ -2945,6 +2964,194 @@ class ArcubusAdminApp:
         )
 
         self.ask_for_more_changes()
+        
+    
+    #Addition in the code
+    
+    def show_article_images(self):
+
+        # Load the selected article into the current edit session.
+        if not self.open_edit_session():
+            return
+
+        # Find image paths in src and data-src attributes.
+        pattern = (
+            r"""(?:src|data-src)\s*=\s*["']([^"']+)["']"""
+        )
+
+        references = re.findall(
+            pattern, #regex mentioned above
+            self.active_edit_html, # currently selected html file
+            flags=re.IGNORECASE # makes the search case-insensitive
+        )
+
+        images = [] #contains the file names for displaying
+        seen = set() #keeps a track of already existing filenames
+
+        for reference in references:
+            reference = reference.strip() # removes blank spaces in the name if any exists
+
+            # Ignore remote URLs, embedded images and fragments.
+            if reference.startswith(
+                ("http://", "https://", "//", "data:", "#")
+            ):
+                continue
+
+            # Match the same folder path used by the existing
+            # replace_article_image() function.
+            reference = reference.split("?")[0].split("#")[0]
+            reference = reference.replace("\\", "/")
+
+            if not reference.startswith("../assets/images/"):
+                continue
+
+            filename = Path(reference).name
+            extension = Path(filename).suffix.lower()
+
+            if extension not in {
+                ".png", ".jpg", ".jpeg", ".webp", ".gif"
+            }:
+                continue
+
+            if filename not in seen:
+                seen.add(filename)
+                images.append(filename)
+
+        if not images:
+            messagebox.showinfo(
+                "No Images Found",
+                "No supported local images were found in this article."
+            )
+            return
+
+        # Create the gallery window.
+        window = tk.Toplevel(self.root)
+        window.title("Images in Selected Article")
+        window.geometry("650x450")
+        window.minsize(450, 300)
+        window.transient(self.root)
+
+        ttk.Label(
+            window,
+            text="Select the image you want to replace",
+            font=("Segoe UI", 11, "bold")
+        ).pack(anchor="w", padx=12, pady=12)
+
+        # Scrollable gallery.
+        container = ttk.Frame(window)
+        container.pack(
+            fill="both",
+            expand=True,
+            padx=12,
+            pady=(0, 12)
+        )
+
+        canvas = tk.Canvas(container, highlightthickness=0)
+
+        scrollbar = ttk.Scrollbar(
+            container,
+            orient="vertical",
+            command=canvas.yview
+        )
+
+        gallery = ttk.Frame(canvas)
+
+        gallery_window = canvas.create_window(
+            (0, 0),
+            window=gallery,
+            anchor="nw"
+        )
+
+        gallery.bind(
+            "<Configure>",
+            lambda event: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.bind(
+            "<Configure>",
+            lambda event: canvas.itemconfigure(
+                gallery_window,
+                width=event.width
+            )
+        )
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Keep thumbnail references alive so Tkinter can display them.
+        window.thumbnail_refs = []
+
+        for filename in images:
+            image_path = IMAGE_DEST_DIR / filename
+
+            row = ttk.Frame(
+                gallery,
+                padding=8,
+                relief="groove" #gives the row a bordered appearance.
+            )
+            row.pack(fill="x", pady=4)
+
+            # Show a thumbnail when Pillow is installed.
+            if PIL_AVAILABLE and image_path.is_file():
+                try:
+                    with Image.open(image_path) as source:
+                        thumbnail = source.convert("RGB")
+                        thumbnail.thumbnail((110, 75))
+
+                        photo = ImageTk.PhotoImage(
+                            thumbnail,
+                            master=window
+                        )
+
+                    window.thumbnail_refs.append(photo)
+
+                    ttk.Label(
+                        row,
+                        image=photo
+                    ).pack(side="left", padx=(0, 12))
+
+                except Exception:
+                    pass
+
+            details = ttk.Frame(row)
+            details.pack(side="left", fill="x", expand=True)
+
+            ttk.Label(
+                details,
+                text=filename,
+                font=("Segoe UI", 10, "bold")
+            ).pack(anchor="w")
+
+            if not image_path.is_file():
+                ttk.Label(
+                    details,
+                    text="File not found in assets/images",
+                ).pack(anchor="w")
+
+            ttk.Button(
+                row,
+                text="Select",
+                command=lambda name=filename: (
+                    self.select_article_image(name, window)
+                )
+            ).pack(side="right", padx=5)
+
+
+    def select_article_image(self, filename, window):
+
+        self.edit_old_image.delete(0, tk.END)
+        self.edit_old_image.insert(0, filename)
+
+        window.destroy()
+
+        self.log_message(
+            f"Selected image for replacement: {filename}"
+        )
+
 
     def browse_image_for_edit(self):
         filename = filedialog.askopenfilename(
@@ -2957,7 +3164,7 @@ class ArcubusAdminApp:
         )
 
         if filename:
-            self.edit_new_image.set(
+            self.edit_new_image.set( # stores the browsed image's path in input field
                 filename
             )
 
@@ -3009,7 +3216,7 @@ class ArcubusAdminApp:
             new_image_path.name
         )
 
-        shutil.copy2(
+        shutil.copy2( #here the image is coped into assets folder
             new_image_path,
             IMAGE_DEST_DIR / new_filename
         )
@@ -3046,6 +3253,18 @@ class ArcubusAdminApp:
                 new_src
             )
         )
+        
+        #ADDITION
+        old_image_path = IMAGE_DEST_DIR / old_filename
+        
+        if(
+            old_filename != new_filename
+            and old_image_path.exists()
+        ):
+            self.pending_images_to_delete.append(
+                old_image_path
+            )
+        
 
         self.log_message(
             f"🖼 Replaced image "
@@ -3076,20 +3295,74 @@ class ArcubusAdminApp:
         else:
             self.btn_save_edits.focus_set()
 
+    # def save_final_edits(self):
+    #     if (
+    #         self.active_file_path
+    #         and self.active_edit_html
+    #     ):
+
+    #         self.active_file_path.write_text(
+    #             self.active_edit_html,
+    #             encoding="utf-8"
+    #         )
+
+    #         messagebox.showinfo(
+    #             "Saved",
+    #             "All mutations finalized successfully:\n"
+    #             f"{self.active_file_path.name}"
+    #         )
+
+    #         self.btn_save_edits.config(
+    #             state="disabled"
+    #         )
+
+    #         self.active_file_path = None
+    #         self.active_edit_html = ""
+    
+    
     def save_final_edits(self):
         if (
             self.active_file_path
             and self.active_edit_html
         ):
+            try:
+                # 1. Save the updated HTML first
+                self.active_file_path.write_text(
+                    self.active_edit_html,
+                    encoding="utf-8"
+                )
 
-            self.active_file_path.write_text(
-                self.active_edit_html,
-                encoding="utf-8"
-            )
+            except OSError as e:
+                messagebox.showerror(
+                    "Save Failed",
+                    f"Could not save the article:\n{e}\n\n"
+                    "The old images have not been deleted."
+                )
+                return
 
+        # 2. Delete old images only after HTML saves
+            for image_path in self.pending_images_to_delete:
+                try:
+                    if image_path.exists():
+                        image_path.unlink()
+
+                        self.log_message(
+                            f"Deleted old image: {image_path.name}"
+                        )
+
+                except OSError as e:
+                    self.log_message(
+                        f"Could not delete old image "
+                        f"{image_path.name}: {e}"
+                    )
+
+            # 3. Clear the pending-deletion list
+            self.pending_images_to_delete.clear()
+
+            # 4. Confirm successful save
             messagebox.showinfo(
                 "Saved",
-                "All mutations finalized successfully:\n"
+                "All changes saved successfully:\n"
                 f"{self.active_file_path.name}"
             )
 
@@ -3136,10 +3409,6 @@ class ArcubusAdminApp:
             import subprocess
             git_repo = SITE_DIR
             
-            # NOTE: Use environment variables for GitHub credentials, never hardcode tokens
-            # Example: GITHUB_PAT_TOKEN = os.environ.get("GITHUB_PAT_TOKEN")
-
-
             # -------------------------------------------------
             # 1. STAGE CHANGES
             # -------------------------------------------------

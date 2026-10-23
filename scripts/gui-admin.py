@@ -79,23 +79,24 @@ def slugify(text: str) -> str:
 
 class ArcubusAdminApp:
 
-    def __init__(self, root):
+    def __init__(self, root): # self->instance
         self.root = root
         self.root.title("Arcubus – Website Content Manager Pro")
-        self.root.geometry("1100x850")
-        self.root.minsize(900, 650)
+        self.root.geometry("700x450")
+        self.root.minsize(700, 450)
 
         self.style = ttk.Style()
         self.style.theme_use("vista" if os.name == "nt" else "clam")
 
         self.storyboard_items = []
+        self.pending_images_to_delete = []
 
         main_frame = ttk.Frame(self.root)
         main_frame.pack(
             fill="both",
             expand=True,
             padx=10,
-            pady=(10, 0)
+            pady=(5, 0)
         )
 
         self.notebook = ttk.Notebook(main_frame)
@@ -103,7 +104,7 @@ class ArcubusAdminApp:
 
         self.build_article_tab()
         self.build_edit_tab()
-        self.pending_images_to_delete = []
+        self.build_delete_article_tab()
         self.build_people_tab()
         self.build_git_panel()
 
@@ -116,7 +117,7 @@ class ArcubusAdminApp:
         self.notebook.add(tab, text=" 📝 Create New Article ")
 
         canvas = tk.Canvas(
-            tab,
+            tab, #canvas->child of article tab
             borderwidth=0,
             highlightthickness=0
         )
@@ -130,7 +131,7 @@ class ArcubusAdminApp:
         self.scrollable_frame = ttk.Frame(canvas)
 
         self.scrollable_frame.bind( #automatically update the scrolling area
-            "<Configure>",
+            "<Configure>", # a generated event when the screen's size position changes
             lambda e: canvas.configure(
                 scrollregion=canvas.bbox("all")
             )
@@ -164,12 +165,8 @@ class ArcubusAdminApp:
         )
 
         self.art_title = tk.StringVar()
-        self.art_category = tk.StringVar(
-            value="Transfer Pricing"
-        )
-        self.art_read_time = tk.StringVar(
-            value="6 min read"
-        )
+        self.art_category = tk.StringVar()
+        self.art_read_time = tk.StringVar()
 
         ttk.Label(
             self.scrollable_frame,
@@ -365,7 +362,7 @@ class ArcubusAdminApp:
             padx=5
         )
 
-        control_deck = ttk.Frame(
+        control_deck = ttk.Frame( # control deck is used to position the 3 buttons
             self.scrollable_frame
         )
 
@@ -396,7 +393,7 @@ class ArcubusAdminApp:
             command=self.add_image_block
         ).pack(side="left", padx=5)
 
-        self.storyboard_container = ttk.Frame(
+        self.storyboard_container = ttk.Frame( # for containing all the main body blocks
             self.scrollable_frame
         )
 
@@ -562,19 +559,19 @@ class ArcubusAdminApp:
             wrap="word"
         )
 
-        txt_box.pack(
+        txt_box.pack( #position inside the container
             side="left",
             padx=10,
             pady=10
         )
 
-        item_data = {
+        item_data = { #dictionary to keep track of dynamically added components
             "type": "p",
             "widget": txt_box,
             "frame": row_frame
         }
 
-        ttk.Button(
+        ttk.Button( #lambda function waits for the user to interact with the button before execution
             row_frame,
             text="❌ Remove",
             command=lambda: self.remove_storyboard_item(
@@ -633,7 +630,7 @@ class ArcubusAdminApp:
 
     def add_image_block(self):
         row_frame = ttk.LabelFrame(
-            self.storyboard_container,
+            self.storyboard_container, #parent block
             text=" Image Layout Asset Block "
         )
 
@@ -643,7 +640,7 @@ class ArcubusAdminApp:
             pady=7
         )
 
-        content_frame = ttk.Frame(row_frame)
+        content_frame = ttk.Frame(row_frame) # frame inside row frame
 
         content_frame.pack(
             fill="x",
@@ -652,7 +649,7 @@ class ArcubusAdminApp:
             pady=8
         )
 
-        controls_frame = ttk.Frame(content_frame)
+        controls_frame = ttk.Frame(content_frame) # for browse function
 
         controls_frame.grid(
             row=0,
@@ -661,7 +658,7 @@ class ArcubusAdminApp:
             padx=(2, 15)
         )
 
-        preview_outer = ttk.Frame(content_frame)
+        preview_outer = ttk.Frame(content_frame) # for preview
 
         preview_outer.grid(
             row=0,
@@ -682,12 +679,12 @@ class ArcubusAdminApp:
         path_var = tk.StringVar()
 
         path_frame = ttk.Frame(
-            controls_frame
+            controls_frame # parent
         )
 
         path_frame.pack(
             fill="x",
-            pady=(0, 10)
+            pady=(0, 10) # 0 padding abobe and 10 units below
         )
 
         ttk.Label(
@@ -709,7 +706,7 @@ class ArcubusAdminApp:
         ttk.Button(
             path_frame,
             text="Browse...",
-            command=lambda: self.browse_file(path_var)
+            command=lambda: self.browse_file(path_var) # again waits till the user clicks the button
         ).pack(side="left")
 
         position_frame = ttk.LabelFrame(
@@ -763,10 +760,10 @@ class ArcubusAdminApp:
             "type": "i",
             "path": path_var,
             "align": align_var,
-            "frame": row_frame
+            "frame": row_frame # stores outer container so that the block can be removed
         }
 
-        preview_canvas = self.create_image_preview(
+        preview_canvas = self.create_image_preview( #calls method that was initilialised in init
             preview_outer,
             path_var,
             align_var
@@ -781,7 +778,7 @@ class ArcubusAdminApp:
                 align_var
             )
 
-        path_var.trace_add(
+        path_var.trace_add( #once user selects an image or changes the path the preview changes
             "write",
             on_path_change
         )
@@ -793,7 +790,7 @@ class ArcubusAdminApp:
                 align_var
             )
 
-        align_var.trace_add(
+        align_var.trace_add( #changes the preview if centreleft,right changes
             "write",
             on_alignment_change
         )
@@ -829,7 +826,7 @@ class ArcubusAdminApp:
 
     def create_image_preview(
         self,
-        parent,
+        parent, #preview-outer
         path_var,
         align_var
     ):
@@ -888,15 +885,15 @@ class ArcubusAdminApp:
             outline="#dddddd"
         )
 
-        align = align_var.get()
+        align = align_var.get() # stores the current algnment stored (c,l,r)
 
         image_path = path_var.get().strip()
 
         loaded_image = None
 
-        if image_path:
+        if image_path:# checks if contains a non empty string
             try:
-                image_path_obj = Path(image_path)
+                image_path_obj = Path(image_path) # converts into a path object
 
                 if image_path_obj.exists():
                     if PIL_AVAILABLE:
@@ -1199,13 +1196,13 @@ class ArcubusAdminApp:
             padx=15
         )
 
-        self.edit_file_box = ttk.Combobox(
+        self.edit_file_box = ttk.Combobox( #combobox for dropdown
             tab,
             width=45,
             state="readonly"
         )
 
-        self.edit_file_box.grid(
+        self.edit_file_box.grid( #helps with the positioning of the container
             row=1,
             column=1,
             sticky="w"
@@ -1430,6 +1427,140 @@ class ArcubusAdminApp:
         self.active_file_path = None
 
         self.refresh_articles_list()
+        
+    # =========================================================
+    # DELETE ARTICLE TAB
+    # =========================================================
+    
+    def build_delete_article_tab(self):
+        tab = ttk.Frame(self.notebook)
+        
+        self.notebook.add(
+            tab,
+            text= "🗑️ Delete Article "
+        )
+        
+        ttk.Label(
+            tab,
+            text="Delete Existing Knowledge Article ",
+            font=("Segoe UI", 12, "bold")
+        ).grid(
+            row=0,
+            column=0,
+            columnspan=3,
+            sticky="w",
+            padx=15,
+            pady=(15, 5)
+        )
+        
+        ttk.Label(
+            tab,
+            text="Select an Article to remove from the website. "
+                 "Knowledge Centre and associated image assets. "
+        ).grid(
+            row=1,
+            column=0,
+            columnspan=3,
+            sticky="w",
+            padx=15,
+            pady=(0, 15)
+        )
+        
+        ttk.Label(
+            tab,
+            text="Select Article ",
+            font=("Segoe UI", 10, "bold")
+        ).grid(
+            row=2,
+            column=0,
+            sticky="w",
+            padx=15,
+            pady=10
+        )
+        
+        self.delete_article_box = ttk.Combobox(
+            tab,
+            width=45,
+            state="readonly"
+        )
+        
+        self.delete_article_box.grid(
+            row=2,
+            column=1,
+            sticky="w",
+            padx=5,
+            pady=8
+        )
+        
+        ttk.Button(
+            tab,
+            text="🔄 Refresh",
+            command=self.refresh_delete_articles_list
+        ).grid(
+            row=2,
+            column=2,
+            sticky="w",
+            padx=5,
+            pady=8
+        )
+        
+        ttk.Label(
+            tab,
+            text=(
+                "Warning: deletion changes your local website files. "
+                "Publish your changes separately to update the live website."
+            ),
+            wraplength=600
+        ).grid(
+            row=3,
+            column=0,
+            columnspan=3,
+            sticky="w",
+            padx=15,
+            pady=15
+        )
+        
+        ttk.Button(
+            tab,
+            text="🗑️ Delete Selected Article",
+            #command=self.delete_selected_article
+            command=lambda: messagebox.showinfo(
+            "UI Preview",
+            "Article deletion logic will be added later.")
+        ).grid(
+            row=4,
+            column=1,
+            sticky="w",
+            padx=5,
+            pady=10
+        )
+        
+        self.refresh_delete_articles_list()
+        
+    def refresh_delete_articles_list(self):
+        """Refresh the dropdown with existing articles."""
+        
+        if not KNOWLEDGE_DIR.exists():
+            self.delete_article_box["values"] = []
+            return
+        
+        files = sorted(
+            path.name
+            for path in KNOWLEDGE_DIR.glob("*.html")
+            if not path.name.startswith("_")
+        )
+        
+        self.delete_article_box["values"] = files
+
+        if files:
+            current = self.delete_article_box.get()
+
+            if current in files:
+                self.delete_article_box.set(current)
+            else:
+                self.delete_article_box.current(0)
+        else:
+            self.delete_article_box.set("")
 
     # =========================================================
     # PEOPLE TAB
@@ -2175,6 +2306,11 @@ class ArcubusAdminApp:
             )
 
             self.refresh_people_list()
+            
+            
+            self.update_git_commit_message(
+                "Our People section updated"
+            )
 
         except PeopleManagerError as e:
             messagebox.showerror(
@@ -2187,8 +2323,8 @@ class ArcubusAdminApp:
         role = self.add_person_role.get().strip()
 
         bio = self.add_person_bio.get(
-            "1.0",
-            "end"
+            "1.0", # read from line 1 character 0
+            "end"  # read till end
         ).strip()
 
         expertise1 = self.add_person_expertise1.get().strip()
@@ -2205,6 +2341,8 @@ class ArcubusAdminApp:
                 expertise2,
                 image_path=image_path
             )
+            
+            
 
             messagebox.showinfo(
                 "Person Added",
@@ -2241,6 +2379,10 @@ class ArcubusAdminApp:
             self.add_person_image.set("")
 
             self.refresh_people_list()
+            
+            self.update_git_commit_message(
+                "Our People section updated"
+        )
 
         except PeopleManagerError as e:
             messagebox.showerror(
@@ -2290,6 +2432,10 @@ class ArcubusAdminApp:
             )
 
             self.refresh_people_list()
+            
+            self.update_git_commit_message(
+                "Our People section updated"
+            )
 
         except PeopleManagerError as e:
             messagebox.showerror(
@@ -2311,21 +2457,20 @@ class ArcubusAdminApp:
             fill="x",
             side="bottom",
             padx=15,
-            #pady=10,
-            pady=(5,10),
-            #ipady=6
+            pady=(1,1),
         )
 
         inner = ttk.Frame(panel)
 
         inner.pack(
-            fill="x",
+            fill="both",
+            expand=True,
             padx=8,
             pady=6
         )
 
         self.git_commit_msg = tk.StringVar(
-            value="Content update to knowledge center articles"
+            value="Content update to the website."
         )
 
         ttk.Label(
@@ -2354,8 +2499,12 @@ class ArcubusAdminApp:
             command=self.trigger_git_engine
         ).pack(
             side="right",
-            padx=(10, 4)
+            padx=(20, 4)
         )
+        
+    
+    def update_git_commit_message(self, message):
+        self.git_commit_msg.set(message)
 
     # =========================================================
     # CORE UTILITIES
@@ -2670,6 +2819,10 @@ class ArcubusAdminApp:
             )
 
         out_path = KNOWLEDGE_DIR / f"{slug}.html"
+        
+        self.update_git_commit_message(
+            "New article created for Knowledge Centre"
+        )
 
         KNOWLEDGE_DIR.mkdir(
             parents=True,
@@ -3294,30 +3447,6 @@ class ArcubusAdminApp:
 
         else:
             self.btn_save_edits.focus_set()
-
-    # def save_final_edits(self):
-    #     if (
-    #         self.active_file_path
-    #         and self.active_edit_html
-    #     ):
-
-    #         self.active_file_path.write_text(
-    #             self.active_edit_html,
-    #             encoding="utf-8"
-    #         )
-
-    #         messagebox.showinfo(
-    #             "Saved",
-    #             "All mutations finalized successfully:\n"
-    #             f"{self.active_file_path.name}"
-    #         )
-
-    #         self.btn_save_edits.config(
-    #             state="disabled"
-    #         )
-
-    #         self.active_file_path = None
-    #         self.active_edit_html = ""
     
     
     def save_final_edits(self):
@@ -3365,6 +3494,10 @@ class ArcubusAdminApp:
                 "All changes saved successfully:\n"
                 f"{self.active_file_path.name}"
             )
+            
+            self.update_git_commit_message(
+            "Content update to Knowledge Centre articles"
+        )
 
             self.btn_save_edits.config(
                 state="disabled"

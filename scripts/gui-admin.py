@@ -72,7 +72,7 @@ KNOWLEDGE_CENTRE_PATH = SITE_DIR / "knowledge-centre.html"
 
 def slugify(text: str) -> str:
     text = text.lower().strip()
-    text = re.sub(r"[^\w\s-]", "", text)
+    text = re.sub(r"[^\w\s-]", "", text) #Transfer Pricing ->
     text = re.sub(r"[-\s]+", "-", text)
     return text.strip("-")
 
@@ -1523,10 +1523,7 @@ class ArcubusAdminApp:
         ttk.Button(
             tab,
             text="🗑️ Delete Selected Article",
-            #command=self.delete_selected_article
-            command=lambda: messagebox.showinfo(
-            "UI Preview",
-            "Article deletion logic will be added later.")
+            command=self.delete_selected_article
         ).grid(
             row=4,
             column=1,
@@ -1561,6 +1558,531 @@ class ArcubusAdminApp:
                 self.delete_article_box.current(0)
         else:
             self.delete_article_box.set("")
+            
+            
+    # =========================================================
+    # DELETE ARTICLE LOGIC
+    # =========================================================
+
+    def delete_selected_article(self):
+        """
+        Delete the selected article, update the Knowledge Centre,
+        and remove associated images when they are not shared
+        with other website pages.
+        """
+
+        # -----------------------------------------------------
+        # STEP 1: GET THE SELECTED ARTICLE
+        # -----------------------------------------------------
+
+        selected_filename = self.delete_article_box.get().strip()
+
+        if not selected_filename:
+            messagebox.showerror(
+                "No Article Selected",
+                "Please select an article to delete."
+            )
+            return
+
+        # -----------------------------------------------------
+        # STEP 2: VALIDATE THE FILENAME
+        # -----------------------------------------------------
+
+        # Only allow a filename, not an arbitrary filesystem path.
+        if (
+            Path(selected_filename).name != selected_filename
+            or not selected_filename.endswith(".html")
+            or selected_filename.startswith("_")
+        ):
+            messagebox.showerror(
+                "Invalid Selection",
+                "The selected article filename is invalid."
+            )
+            return
+
+        article_path = KNOWLEDGE_DIR / selected_filename
+
+        # Resolve the path and verify that it stays inside
+        # the knowledge directory.
+        try:
+            article_path = article_path.resolve()
+            knowledge_root = KNOWLEDGE_DIR.resolve()
+
+            if (
+                article_path.parent != knowledge_root
+                or not article_path.is_file()
+            ):
+                messagebox.showerror(
+                    "Article Not Found",
+                    "The selected article file does not exist."
+                )
+                return
+
+        except OSError as e:
+            messagebox.showerror(
+                "Path Error",
+                f"Could not validate the article path:\n{e}"
+            )
+            return
+
+        # -----------------------------------------------------
+        # STEP 3: CHECK THE KNOWLEDGE CENTRE
+        # -----------------------------------------------------
+
+        if not KNOWLEDGE_CENTRE_PATH.is_file():
+            messagebox.showerror(
+                "Knowledge Centre Error",
+                "knowledge-centre.html was not found.\n\n"
+                "The article has not been deleted."
+            )
+            return
+
+        # -----------------------------------------------------
+        # STEP 4: READ THE ARTICLE AND KNOWLEDGE CENTRE
+        # -----------------------------------------------------
+
+        try:
+            article_html = article_path.read_text(
+                encoding="utf-8"
+            )
+
+            knowledge_html = KNOWLEDGE_CENTRE_PATH.read_text(
+                encoding="utf-8"
+            )
+
+        except (OSError, UnicodeError) as e:
+            messagebox.showerror(
+                "Read Error",
+                f"Could not read the required HTML files:\n{e}"
+            )
+            return
+
+        # The standalone file is named <slug>.html.
+        # Therefore, its stem is the article slug.
+        slug = article_path.stem
+
+        article_url = f"knowledge/{selected_filename}"
+
+        # -----------------------------------------------------
+        # STEP 5: FIND LOCAL ARTICLE IMAGES
+        # -----------------------------------------------------
+
+        image_pattern = (
+            r"""(?:src|data-src)\s*=\s*["']([^"']+)["']"""
+        )
+
+        image_references = re.findall(
+            image_pattern,
+            article_html,
+            flags=re.IGNORECASE
+        )
+
+        article_images = set()
+
+        for reference in image_references:
+
+            # Ignore query strings and URL fragments.
+            reference = reference.split("#", 1)[0]
+            reference = reference.split("?", 1)[0]
+
+            # Ignore remote URLs, embedded images, and unrelated
+            # assets. The article creator uses this exact path.
+            if not reference.startswith("../assets/images/"):
+                continue
+
+            image_filename = Path(reference).name
+
+            if not image_filename:
+                continue
+
+            image_path = (
+                IMAGE_DEST_DIR / image_filename
+            ).resolve()
+
+            # Only allow files directly inside assets/images.
+            try:
+                if image_path.parent != IMAGE_DEST_DIR.resolve():
+                    continue
+            except OSError:
+                continue
+
+            if image_path.is_file():
+                article_images.add(image_path)
+
+        # -----------------------------------------------------
+        # STEP 6: PREPARE THE UPDATED KNOWLEDGE CENTRE
+        # -----------------------------------------------------
+
+        # Remove the article card from the HTML grid.
+        #
+        # This matches the article card by its href, rather
+        # than by its title, which may contain special characters.
+
+        card_pattern = re.compile(
+            r'<a\b'
+            r'(?=[^>]*\bhref\s*=\s*["\']'
+            + re.escape(article_url)
+            + r'["\'])'
+            r'[^>]*>.*?</a>',
+            flags=re.IGNORECASE | re.DOTALL
+        )
+
+        updated_knowledge_html, cards_removed = (
+            card_pattern.subn(
+                "",
+                knowledge_html
+            )
+        )
+
+        if cards_removed == 0:
+            messagebox.showerror(
+                "Article Card Not Found",
+                "The selected article was not found in "
+                "knowledge-centre.html.\n\n"
+                "No files have been deleted. Please check "
+                "the Knowledge Centre entry manually."
+            )
+            return
+
+        # -----------------------------------------------------
+        # STEP 7: REMOVE THE BLOGPOSTING JSON-LD ENTRY
+        # -----------------------------------------------------
+
+        # The article creator inserts a BlogPosting object
+        # containing:
+        #
+        # "url": "arcubus.in/knowledge/<slug>.html"
+        #
+        # Remove only the JSON object containing that URL.
+        # Brace matching is used because the object contains
+        # a nested author object.
+
+        target_url = f"arcubus.in/knowledge/{selected_filename}"
+
+        url_position = updated_knowledge_html.find(target_url)
+
+        if url_position != -1:
+
+            # Find the opening brace of the BlogPosting object.
+            object_start = updated_knowledge_html.rfind(
+                "{",
+                0,
+                url_position
+            )
+
+            if object_start != -1:
+
+                depth = 0
+                in_string = False
+                escaped_char = False
+                object_end = None
+
+                # Find the matching closing brace, ignoring
+                # braces that occur inside JSON strings.
+
+                for index in range(
+                    object_start,
+                    len(updated_knowledge_html)
+                ):
+
+                    char = updated_knowledge_html[index]
+
+                    if in_string:
+
+                        if escaped_char:
+                            escaped_char = False
+
+                        elif char == "\\":
+                            escaped_char = True
+
+                        elif char == '"':
+                            in_string = False
+
+                        continue
+
+                    if char == '"':
+                        in_string = True
+
+                    elif char == "{":
+                        depth += 1
+
+                    elif char == "}":
+                        depth -= 1
+
+                        if depth == 0:
+                            object_end = index + 1
+                            break
+
+                if object_end is not None:
+
+                    # Remove the object and one adjacent comma,
+                    # if present, so the JSON array remains valid.
+
+                    remove_start = object_start
+                    remove_end = object_end
+
+                    before = updated_knowledge_html[:remove_start]
+                    after = updated_knowledge_html[remove_end:]
+
+                    if before.rstrip().endswith(","):
+                        comma_position = (
+                            len(before.rstrip()) - 1
+                        )
+                        remove_start = comma_position
+
+                    elif after.lstrip().startswith(","):
+                        comma_position = (
+                            remove_end
+                            + len(after) - len(after.lstrip())
+                        )
+                        remove_end = comma_position + 1
+
+                    updated_knowledge_html = (
+                        updated_knowledge_html[:remove_start]
+                        + updated_knowledge_html[remove_end:]
+                    )
+
+        # -----------------------------------------------------
+        # STEP 8: CONFIRM BEFORE DELETION
+        # -----------------------------------------------------
+
+        image_names = sorted(
+            image.name for image in article_images
+        )
+
+        image_summary = (
+            "\n\nImages referenced by this article:\n"
+            + "\n".join(image_names)
+            if image_names
+            else "\n\nNo local article images were found."
+        )
+
+        confirmed = messagebox.askyesno(
+            "Confirm Article Deletion",
+            f"Are you sure you want to delete "
+            f"'{selected_filename}'?\n\n"
+            "The following changes will be made:\n"
+            "• Delete the standalone article HTML file.\n"
+            "• Remove its Knowledge Centre card.\n"
+            "• Remove its BlogPosting structured-data entry."
+            + image_summary
+            + "\n\nImages used elsewhere on the website "
+              "will be preserved.\n\n"
+              "This action cannot be undone automatically."
+        )
+
+        if not confirmed:
+            return
+
+        # -----------------------------------------------------
+        # STEP 9: WRITE THE UPDATED KNOWLEDGE CENTRE
+        # -----------------------------------------------------
+
+        # Prepare the updated HTML before deleting the article.
+        # A backup allows the Knowledge Centre to be restored
+        # if a later filesystem operation fails.
+
+        backup_path = None
+        deleted_images = []
+        article_deleted = False
+
+        try:
+
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=".html",
+                prefix="knowledge-centre-backup-",
+                dir=KNOWLEDGE_CENTRE_PATH.parent,
+                delete=False
+            ) as backup_file:
+
+                backup_file.write(knowledge_html)
+                backup_path = Path(backup_file.name)
+
+            KNOWLEDGE_CENTRE_PATH.write_text(
+                updated_knowledge_html,
+                encoding="utf-8"
+            )
+
+            # -------------------------------------------------
+            # STEP 10: DELETE THE STANDALONE ARTICLE
+            # -------------------------------------------------
+
+            article_path.unlink()
+            article_deleted = True
+
+            # -------------------------------------------------
+            # STEP 11: DELETE UNUSED ARTICLE IMAGES
+            # -------------------------------------------------
+
+            # Check all remaining website HTML files.
+            # An image is deleted only if no other HTML page
+            # references that filename.
+
+            remaining_html_files = list(
+                SITE_DIR.rglob("*.html")
+            )
+
+            for image_path in sorted(article_images):
+
+                image_is_shared = False
+
+                for html_path in remaining_html_files:
+
+                    # The selected article has already been
+                    # deleted, so it will not appear here.
+
+                    try:
+                        page_html = html_path.read_text(
+                            encoding="utf-8"
+                        )
+                    except (OSError, UnicodeError):
+                        # If a page cannot be inspected safely,
+                        # preserve the image.
+                        image_is_shared = True
+                        break
+
+                    references = re.findall(
+                        image_pattern,
+                        page_html,
+                        flags=re.IGNORECASE
+                    )
+
+                    for reference in references:
+
+                        reference = reference.split("#", 1)[0]
+                        reference = reference.split("?", 1)[0]
+
+                        if (
+                            Path(reference).name
+                            == image_path.name
+                        ):
+                            image_is_shared = True
+                            break
+
+                    if image_is_shared:
+                        break
+
+                if not image_is_shared and image_path.is_file():
+
+                    image_path.unlink()
+                    deleted_images.append(image_path.name)
+
+        except Exception as e:
+
+            # Restore the Knowledge Centre and the article
+            # if an operation fails partway through.
+
+            rollback_errors = []
+
+            try:
+                if backup_path and backup_path.exists():
+                    shutil.copy2(
+                        backup_path,
+                        KNOWLEDGE_CENTRE_PATH
+                    )
+            except OSError as rollback_error:
+                rollback_errors.append(
+                    f"Knowledge Centre restoration failed: "
+                    f"{rollback_error}"
+                )
+
+            if article_deleted:
+
+                try:
+                    article_path.write_text(
+                        article_html,
+                        encoding="utf-8"
+                    )
+                except OSError as rollback_error:
+                    rollback_errors.append(
+                        f"Article restoration failed: "
+                        f"{rollback_error}"
+                    )
+
+            for image_name in deleted_images:
+                rollback_errors.append(
+                    f"Image '{image_name}' was already deleted "
+                    "and cannot be restored automatically."
+                )
+
+            if backup_path:
+
+                try:
+                    backup_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+
+            error_message = (
+                "The deletion did not complete successfully.\n\n"
+                f"Error: {e}"
+            )
+
+            if rollback_errors:
+                error_message += (
+                    "\n\nRecovery warnings:\n"
+                    + "\n".join(rollback_errors)
+                )
+
+            messagebox.showerror(
+                "Deletion Failed",
+                error_message
+            )
+            return
+
+        # -----------------------------------------------------
+        # STEP 12: REMOVE TEMPORARY BACKUP
+        # -----------------------------------------------------
+
+        if backup_path:
+
+            try:
+                backup_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+        # -----------------------------------------------------
+        # STEP 13: UPDATE THE GIT COMMIT MESSAGE
+        # -----------------------------------------------------
+
+        self.update_git_commit_message(
+            "Article deleted from Knowledge Centre"
+        )
+
+        # -----------------------------------------------------
+        # STEP 14: REFRESH THE DROPDOWN
+        # -----------------------------------------------------
+
+        self.refresh_delete_articles_list()
+
+        # Also refresh the Edit Article dropdown if it exists.
+        self.refresh_articles_list()
+
+        # -----------------------------------------------------
+        # STEP 15: SHOW SUCCESS MESSAGE
+        # -----------------------------------------------------
+
+        shared_images = (
+            len(article_images) - len(deleted_images)
+        )
+
+        message = (
+            f"Article deleted successfully!\n\n"
+            f"Article: {selected_filename}\n"
+            f"Knowledge Centre: Updated\n"
+            f"BlogPosting structured data: Checked\n"
+            f"Images deleted: {len(deleted_images)}\n"
+            f"Images preserved because they are shared: "
+            f"{max(0, shared_images)}\n\n"
+            "Publish your changes separately to update "
+            "the live website."
+        )
+
+        messagebox.showinfo(
+            "Article Deleted",
+            message
+        )
 
     # =========================================================
     # PEOPLE TAB

@@ -1537,27 +1537,27 @@ class ArcubusAdminApp:
     def refresh_delete_articles_list(self):
         """Refresh the dropdown with existing articles."""
         
-        if not KNOWLEDGE_DIR.exists():
+        if not KNOWLEDGE_DIR.exists(): #if knowledge centre page doesnt exist the dropdown shows 0 values
             self.delete_article_box["values"] = []
             return
         
-        files = sorted(
+        files = sorted( #inbuilt pyhton function for displaying articles in alphabetical order
             path.name
-            for path in KNOWLEDGE_DIR.glob("*.html")
-            if not path.name.startswith("_")
+            for path in KNOWLEDGE_DIR.glob("*.html") #glob searches for the matching filename
+            if not path.name.startswith("_") # reason know-centre template has _ so for no confusion
         )
         
-        self.delete_article_box["values"] = files
+        self.delete_article_box["values"] = files #current dropdown articles are stored in list
 
         if files:
             current = self.delete_article_box.get()
 
             if current in files:
-                self.delete_article_box.set(current)
+                self.delete_article_box.set(current)# if selected article is in list delete it
             else:
-                self.delete_article_box.current(0)
+                self.delete_article_box.current(0)# if selection is invalid then upon refreshing the code selects the first item in the list
         else:
-            self.delete_article_box.set("")
+            self.delete_article_box.set("")# if no files present
             
             
     # =========================================================
@@ -1570,11 +1570,8 @@ class ArcubusAdminApp:
         and remove associated images when they are not shared
         with other website pages.
         """
-
-        # -----------------------------------------------------
-        # STEP 1: GET THE SELECTED ARTICLE
-        # -----------------------------------------------------
-
+        
+        #select the file from dropdown
         selected_filename = self.delete_article_box.get().strip()
 
         if not selected_filename:
@@ -1584,13 +1581,9 @@ class ArcubusAdminApp:
             )
             return
 
-        # -----------------------------------------------------
-        # STEP 2: VALIDATE THE FILENAME
-        # -----------------------------------------------------
-
         # Only allow a filename, not an arbitrary filesystem path.
         if (
-            Path(selected_filename).name != selected_filename
+            Path(selected_filename).name != selected_filename#cms should delete articles from the cmd not any random plcae 
             or not selected_filename.endswith(".html")
             or selected_filename.startswith("_")
         ):
@@ -1600,7 +1593,7 @@ class ArcubusAdminApp:
             )
             return
 
-        article_path = KNOWLEDGE_DIR / selected_filename
+        article_path = KNOWLEDGE_DIR / selected_filename #construct the file path
 
         # Resolve the path and verify that it stays inside
         # the knowledge directory.
@@ -1609,7 +1602,7 @@ class ArcubusAdminApp:
             knowledge_root = KNOWLEDGE_DIR.resolve()
 
             if (
-                article_path.parent != knowledge_root
+                article_path.parent != knowledge_root #checks if articles parent==know dir
                 or not article_path.is_file()
             ):
                 messagebox.showerror(
@@ -1628,7 +1621,9 @@ class ArcubusAdminApp:
         # -----------------------------------------------------
         # STEP 3: CHECK THE KNOWLEDGE CENTRE
         # -----------------------------------------------------
-
+        
+        #is_file checks whether the path is true and also if it is an actual file(not a folder)(returns yes when both true)
+        
         if not KNOWLEDGE_CENTRE_PATH.is_file():
             messagebox.showerror(
                 "Knowledge Centre Error",
@@ -1642,12 +1637,12 @@ class ArcubusAdminApp:
         # -----------------------------------------------------
 
         try:
-            article_html = article_path.read_text(
-                encoding="utf-8"
+            article_html = article_path.read_text( #standalone file
+                encoding="utf-8" #read for figuring out the images
             )
 
             knowledge_html = KNOWLEDGE_CENTRE_PATH.read_text(
-                encoding="utf-8"
+                encoding="utf-8"#for finding the entry of the article in know-centre page
             )
 
         except (OSError, UnicodeError) as e:
@@ -1659,7 +1654,7 @@ class ArcubusAdminApp:
 
         # The standalone file is named <slug>.html.
         # Therefore, its stem is the article slug.
-        slug = article_path.stem
+        #slug = article_path.stem#.stem returns file name without extension
 
         article_url = f"knowledge/{selected_filename}"
 
@@ -1668,29 +1663,33 @@ class ArcubusAdminApp:
         # -----------------------------------------------------
 
         image_pattern = (
-            r"""(?:src|data-src)\s*=\s*["']([^"']+)["']"""
-        )
+            r"""(?:src)\s*=\s*["']([^"']+)["']"""
+        ) # stores the regex string in image_pattern
 
-        image_references = re.findall(
+        image_references = re.findall(#extracts all image references
             image_pattern,
-            article_html,
-            flags=re.IGNORECASE
+            article_html, #defined in above section
+            flags=re.IGNORECASE#makes matching case insensetive
         )
 
-        article_images = set()
+        article_images = set()#python built in function for creating set
 
         for reference in image_references:
 
             # Ignore query strings and URL fragments.
             reference = reference.split("#", 1)[0]
             reference = reference.split("?", 1)[0]
+            #for splitting browser urls
 
             # Ignore remote URLs, embedded images, and unrelated
             # assets. The article creator uses this exact path.
             if not reference.startswith("../assets/images/"):
                 continue
+            #as we need to delete the images from assets folder as well
 
             image_filename = Path(reference).name
+            #if ref = "../assets/images/transfer-pricing.jpg" ; Path(reference).name= transfer-pricing.jpg
+            #done to locate the img in the assets folder properly
 
             if not image_filename:
                 continue
@@ -1701,36 +1700,34 @@ class ArcubusAdminApp:
 
             # Only allow files directly inside assets/images.
             try:
-                if image_path.parent != IMAGE_DEST_DIR.resolve():
+                if image_path.parent != IMAGE_DEST_DIR.resolve():#cross-checks whether the img is inside the assets folder
                     continue
             except OSError:
                 continue
 
             if image_path.is_file():
-                article_images.add(image_path)
+                article_images.add(image_path)#the set was created at the beginning of the section
 
         # -----------------------------------------------------
         # STEP 6: PREPARE THE UPDATED KNOWLEDGE CENTRE
         # -----------------------------------------------------
-
-        # Remove the article card from the HTML grid.
-        #
-        # This matches the article card by its href, rather
-        # than by its title, which may contain special characters.
-
-        card_pattern = re.compile(
-            r'<a\b'
+        #responsible finding and removing a particular article's card from knowledge-centre.html
+        
+        card_pattern = re.compile(# searches for an anchor tag
+            r'<a\b'#matches HTML tag opening with a; \b regex word boundary
             r'(?=[^>]*\bhref\s*=\s*["\']'
             + re.escape(article_url)
             + r'["\'])'
             r'[^>]*>.*?</a>',
-            flags=re.IGNORECASE | re.DOTALL
+            flags=re.IGNORECASE | re.DOTALL#makes it case insestive
         )
-
+        
+        #subn returns 2 values in tuple
+        #updated_knowledge_html#this variable recieves modified HTML; cards_removed = #receives no.of substitutions
         updated_knowledge_html, cards_removed = (
             card_pattern.subn(
-                "",
-                knowledge_html
+                "",#matching string is replaced with nothing
+                knowledge_html#source string
             )
         )
 
@@ -1744,38 +1741,27 @@ class ArcubusAdminApp:
             )
             return
 
-        # -----------------------------------------------------
-        # STEP 7: REMOVE THE BLOGPOSTING JSON-LD ENTRY
-        # -----------------------------------------------------
-
-        # The article creator inserts a BlogPosting object
-        # containing:
-        #
-        # "url": "arcubus.in/knowledge/<slug>.html"
-        #
-        # Remove only the JSON object containing that URL.
-        # Brace matching is used because the object contains
-        # a nested author object.
-
+        
+        #remove standalone file
         target_url = f"arcubus.in/knowledge/{selected_filename}"
 
-        url_position = updated_knowledge_html.find(target_url)
+        url_position = updated_knowledge_html.find(target_url)#returns the starting index of url
 
         if url_position != -1:
 
             # Find the opening brace of the BlogPosting object.
             object_start = updated_knowledge_html.rfind(
-                "{",
-                0,
+                "{",# rfind finds the last occurence of "{"
+                0, #index of search range beginning
                 url_position
             )
 
             if object_start != -1:
 
-                depth = 0
-                in_string = False
-                escaped_char = False
-                object_end = None
+                depth = 0 # keeps track of nesting level of the 
+                in_string = False #tracks whether the current character being read is inside a JSON string or outside it
+                #escaped_char = False
+                object_end = None #initially none as the end hasnt been found
 
                 # Find the matching closing brace, ignoring
                 # braces that occur inside JSON strings.
@@ -1789,11 +1775,11 @@ class ArcubusAdminApp:
 
                     if in_string:
 
-                        if escaped_char:
-                            escaped_char = False
+                        # if escaped_char:
+                        #     escaped_char = False
 
-                        elif char == "\\":
-                            escaped_char = True
+                        # elif char == "\\":
+                        #     escaped_char = True
 
                         elif char == '"':
                             in_string = False
@@ -1821,6 +1807,7 @@ class ArcubusAdminApp:
                     remove_start = object_start
                     remove_end = object_end
 
+                    #slicing
                     before = updated_knowledge_html[:remove_start]
                     after = updated_knowledge_html[remove_end:]
 
@@ -1831,7 +1818,7 @@ class ArcubusAdminApp:
                         remove_start = comma_position
 
                     elif after.lstrip().startswith(","):
-                        comma_position = (
+                        comma_position = ( #finds loc in the original html string
                             remove_end
                             + len(after) - len(after.lstrip())
                         )
@@ -1913,130 +1900,27 @@ class ArcubusAdminApp:
             article_deleted = True
 
             # -------------------------------------------------
-            # STEP 11: DELETE UNUSED ARTICLE IMAGES
+            # STEP 11: DELETE ARTICLE IMAGES
             # -------------------------------------------------
 
-            # Check all remaining website HTML files.
-            # An image is deleted only if no other HTML page
-            # references that filename.
-
-            remaining_html_files = list(
-                SITE_DIR.rglob("*.html")
-            )
-
             for image_path in sorted(article_images):
-
-                image_is_shared = False
-
-                for html_path in remaining_html_files:
-
-                    # The selected article has already been
-                    # deleted, so it will not appear here.
-
-                    try:
-                        page_html = html_path.read_text(
-                            encoding="utf-8"
-                        )
-                    except (OSError, UnicodeError):
-                        # If a page cannot be inspected safely,
-                        # preserve the image.
-                        image_is_shared = True
-                        break
-
-                    references = re.findall(
-                        image_pattern,
-                        page_html,
-                        flags=re.IGNORECASE
-                    )
-
-                    for reference in references:
-
-                        reference = reference.split("#", 1)[0]
-                        reference = reference.split("?", 1)[0]
-
-                        if (
-                            Path(reference).name
-                            == image_path.name
-                        ):
-                            image_is_shared = True
-                            break
-
-                    if image_is_shared:
-                        break
-
-                if not image_is_shared and image_path.is_file():
-
+                if image_path.is_file():
                     image_path.unlink()
                     deleted_images.append(image_path.name)
-
-        except Exception as e:
-
-            # Restore the Knowledge Centre and the article
-            # if an operation fails partway through.
-
-            rollback_errors = []
-
-            try:
-                if backup_path and backup_path.exists():
-                    shutil.copy2(
-                        backup_path,
-                        KNOWLEDGE_CENTRE_PATH
-                    )
-            except OSError as rollback_error:
-                rollback_errors.append(
-                    f"Knowledge Centre restoration failed: "
-                    f"{rollback_error}"
-                )
-
-            if article_deleted:
-
-                try:
-                    article_path.write_text(
-                        article_html,
-                        encoding="utf-8"
-                    )
-                except OSError as rollback_error:
-                    rollback_errors.append(
-                        f"Article restoration failed: "
-                        f"{rollback_error}"
-                    )
-
-            for image_name in deleted_images:
-                rollback_errors.append(
-                    f"Image '{image_name}' was already deleted "
-                    "and cannot be restored automatically."
-                )
-
-            if backup_path:
-
-                try:
-                    backup_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
-
-            error_message = (
-                "The deletion did not complete successfully.\n\n"
-                f"Error: {e}"
-            )
-
-            if rollback_errors:
-                error_message += (
-                    "\n\nRecovery warnings:\n"
-                    + "\n".join(rollback_errors)
-                )
-
+        
+        
+        except OSError as e:
             messagebox.showerror(
-                "Deletion Failed",
-                error_message
+                "Deletion Error",
+                f"An error occurred while deleting the article:\n{e}"
             )
-            return
+            return    
 
         # -----------------------------------------------------
         # STEP 12: REMOVE TEMPORARY BACKUP
         # -----------------------------------------------------
 
         if backup_path:
-
             try:
                 backup_path.unlink(missing_ok=True)
             except OSError:
